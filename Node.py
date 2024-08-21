@@ -79,7 +79,7 @@ class Node:
         self.predecessorAddress = (None, None)
         self.successor = None
         self.successorAddress = (None, None)
-        self.finger_table = []
+        self.finger_table = [(None, None) for _ in range(m)]
         self.http_client = HTTPClient(ip, port)
 
     def get_id(self):
@@ -153,8 +153,28 @@ class Node:
         data = json.dumps(data)
         self.http_client.send_request('/connect', ip, port, data)
 
-    def join_node(self, existing_node):
+    def join_node(self, ip, port):
+        idNewNode = getHash(ip + str(port))
+
+        if self.successor is None:
+            # If the current node is alone in the network
+            self.successor = idNewNode
+            self.successorAddress = (ip, port)
+            self.predecessor = idNewNode
+            self.predecessorAddress = (ip, port)
+            self.update_finger_table()
+            self.update_others_finger_table()
+        else:
+            pass
+
+
+
+    def find_successor(self, idNewNode):
         pass
+    
+    def update_successor(self, ip, port, idNewNode):
+        pass
+        
 
     def update_predecessor(self):
         pass
