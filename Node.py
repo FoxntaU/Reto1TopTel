@@ -4,14 +4,22 @@ from http.server import HTTPServer
 import json
 import sys
 from functools import partial
+from concurrent.futures import ThreadPoolExecutor
+from collections import OrderedDict
+
+
+import grpc # pip install grpcio
+import Searchsucc_pb2 # pip install protobuf
+import Searchsucc_pb2_grpc # pip install protobuf
+
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
-
-
 
 # Classes to handle API REST, gRPC, and MOM requests
 
 # REST API
+
+# RequestHandler class to handle all the requests received by the server
 class RequestHandler(BaseHTTPRequestHandler):
     def __init__(self, node, *args, **kwargs):
         self.node = node
@@ -25,7 +33,8 @@ class RequestHandler(BaseHTTPRequestHandler):
             ip = data.get('ip')
             port = data.get('port')
             connectionType = data.get('connectionType')
-            threading.Thread(target=self.node.connection_thread, args=(ip, port, connectionType)).start()
+            dataforprocces = data.get('data', None)
+            threading.Thread(target=self.node.connection_thread, args=(ip, port, connectionType, dataforprocces)).start()
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
@@ -34,6 +43,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 import http.client
 import json
 
+# HTTPClient class to send requests to other nodes in the network
 class HTTPClient:
     def __init__(self, ip, port):
         self.ip = ip
@@ -41,7 +51,7 @@ class HTTPClient:
 
     def send_request(self, path, ip, port, data):
         try:
-            connection = http.client.HTTPConnection(ip, port)
+            connection = http.client.HTTPConnection(ip, port) 
             headers = {'Content-type': 'application/json'}
             connection.request('POST', path, body=data, headers=headers)
             response = connection.getresponse()
@@ -54,6 +64,46 @@ class HTTPClient:
             connection.close()
 
 # gRPC
+
+class NodeGRPCServer(Searchsucc_pb2_grpc.SearchsuccServicer):
+    def __init__(self, node):
+        self.node = node
+
+    
+    def LookupID(self, request, context):
+        print("LookupID request received")
+        keyID = request.idNode
+        if self.node.id == keyID:  # Si el ID coincide con el ID del nodo actual
+            result = False
+            address = f"{self.node.ip}:{self.node.port}"
+        elif self.node.succID == self.node.id:  # Si solo hay un nodo
+            result = False
+            address = f"{self.node.ip}:{self.node.port}"
+        elif self.node.id > keyID:  # Si el ID es menor, consultar el predecesor
+            if self.node.predID < keyID:
+                result = False
+                address = f"{self.node.ip}:{self.node.port}"
+            elif self.node.predID > self.node.id:
+                result = False
+                address = f"{self.node.ip}:{self.node.port}"
+            else:
+                result = True
+                address = f"{self.node.pred[0]}:{self.node.pred[1]}"
+        else:  # Si el ID es mayor, consultar la tabla de dedos
+            if self.node.id > self.node.succID:
+                result = False
+                address = f"{self.node.succ[0]}:{self.node.succ[1]}"
+            else:
+                for key, value in self.node.finger_table.items():
+                    if key >= keyID:
+                        result = True
+                        address = f"{value[0]}:{value[1]}"
+                        break
+                else:
+                    result = False
+                    address = f"{self.node.succ[0]}:{self.node.succ[1]}"
+
+        return Searchsucc_pb2.LookupIDResponse(result=result, address=address)
 
 # MOM
 
@@ -70,17 +120,18 @@ def getHash(key):
 
 class Node:
     def __init__(self, ip, port):
+        self.filenameList = []
         self.ip = ip
         self.port = port
         self.address = (ip, port)
-        self.id = getHash(ip + str(port))
-        self.files = []
-        self.predecessor = None
-        self.predecessorAddress = (None, None)
-        self.successor = None
-        self.successorAddress = (None, None)
-        self.finger_table = [(None, None) for _ in range(m)]
+        self.id = getHash(ip + ":" + str(port))
+        self.pred = (self.ip, self.port)
+        self.predID = self.id
+        self.succ = (self.ip, self.port)
+        self.succID = self.id
+        self.finger_table = OrderedDict()
         self.http_client = HTTPClient(ip, port)
+        self.grpc_server = None
 
     def get_id(self):
         return self.id
@@ -90,13 +141,14 @@ class Node:
         server = HTTPServer((self.ip, self.port), lambda *args, **kwargs: RequestHandler(self, *args, **kwargs))
         server.serve_forever()
 
-    def connection_thread(self, ip, port, connectionType):
+    def connection_thread(self, ip, port, connectionType, dataforprocces):
         # 5 Types of connections
         # type 0: peer connect
         # type 1: client
         # type 2: ping
         # type 3: lookupID
-        # type 4: updateSucc/Pred
+        # type 4: updateSucc
+        # type 5: updatePred
 
         if connectionType == 0:
             print("Connection with:", ip, ":", port)
@@ -110,16 +162,21 @@ class Node:
         elif connectionType == 2:
             # Handle ping
             pass
-
+        
         elif connectionType == 3:
-            # Handle lookup request
-            pass
+            # Handle lookup request for successor
+            print("Connection with:", ip, ":", port, "for lookup")
+            self.lookupID(ip, port, dataforprocces)
 
         elif connectionType == 4:
-            # Handle predecessor/successor update
-            pass
+            # Handle update successor request
+           self.update_successor(ip, port)
 
         elif connectionType == 5:
+            # Handle update predecessor request
+            self.update_predecessor(ip, port)
+
+        elif connectionType == 6:
             # Handle update finger table request
             pass
 
@@ -143,44 +200,40 @@ class Node:
         else:
             print("Invalid choice")
 
-
-    def send_join_request(self, ip, port):
-        data = {
-            "ip": self.ip,
-            "port": self.port,
-            "connectionType": 0
-        }
-        data = json.dumps(data)
-        self.http_client.send_request('/connect', ip, port, data)
-
-    def join_node(self, ip, port):
-        idNewNode = getHash(ip + str(port))
-
-        if self.successor is None:
-            # If the current node is alone in the network
-            self.successor = idNewNode
-            self.successorAddress = (ip, port)
-            self.predecessor = idNewNode
-            self.predecessorAddress = (ip, port)
-            self.update_finger_table()
-            self.update_others_finger_table()
+    def join_node(self, address):
+        ipnewnode, portnewnode = address
+        idnewnode = getHash(ipnewnode + str(portnewnode))
+        print(f"Joining network at {ipnewnode}:{portnewnode}")
+        #findind successor of new node
+        if self.succID is None:
+            self.succID = idnewnode
+            self.succ = (ipnewnode, portnewnode)
+            print(f"Successor found: {self.succID} at {self.succ}")
         else:
-            pass
+            self.getSuccessor(address, self.id)
 
+    # Send join request to the node like a client to connect to the network # (CLIENT SIDE)
+    def send_join_request(self, ip, port): 
+        result, address = self.getSuccessor(ip, port)
+        print(f"Successor found: {result} at {address}")
 
+    # Get the successor of the node # (CLIENT SIDE)
+    def getSuccessor(self, ip, port):
+        keyID = self.id
+        with grpc.insecure_channel(f'{ip}:{port + 1}') as channel:
+            stub = Searchsucc_pb2_grpc.SearchsuccStub(channel)
+            request = Searchsucc_pb2.LookupIDRequest(idNode=keyID)
+            response = stub.LookupID(request)
+            return response.result, response.address
 
-    def find_successor(self, idNewNode):
-        pass
     
-    def update_successor(self, ip, port, idNewNode):
-        pass
+    def update_successor(self, ip, port):
+        self.succID = getHash(ip + ":" + str(port))
+        self.succ = (ip, port)
         
-
-    def update_predecessor(self):
-        pass
-
-    def update_successor(self):
-        pass
+    def update_predecessor(self, ip, port):
+        self.predID = getHash(ip + ":" + str(port))
+        self.pred = (ip, port)
 
     def print_predecessor_successor(self):
         pass
@@ -192,11 +245,6 @@ class Node:
         pass
 
     def print_finger_table(self):
-        pass
-
-
-
-    def lookup(self, key):
         pass
 
     def upload_file(self):
@@ -215,15 +263,22 @@ class Node:
         print("\n1. Join Network\n2. Leave Network\n3. Upload File\n4. Download File")
         print("5. Print Finger Table\n6. Print my predecessor and successor")
 
+    def start_grpc_server(self):
+        # Configuración y arranque del servidor gRPC
+        self.grpc_server = grpc.server(ThreadPoolExecutor(max_workers=10))
+        Searchsucc_pb2_grpc.add_SearchsuccServicer_to_server(NodeGRPCServer(self), self.grpc_server)
+        self.grpc_server.add_insecure_port(f'{self.ip}:{self.port + 1}')
+        self.grpc_server.start()
+        print(f"gRPC server running on {self.ip}:{self.port + 1}")
+        self.grpc_server.wait_for_termination()
+
     def start (self):
         threading.Thread(target=self.listen).start()
+        threading.Thread(target=self.start_grpc_server).start()
         while True:
             self.asAClientThread()
 
-
-
 if __name__ == "__main__":
-
     if len(sys.argv) < 3:
         print("Arguments not supplied (Defaults used)")
     else:
@@ -239,4 +294,3 @@ if __name__ == "__main__":
             pass
     except KeyboardInterrupt:
         print("Server is shutting down.")
-
