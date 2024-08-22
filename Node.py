@@ -9,8 +9,9 @@ from collections import OrderedDict
 
 
 import grpc # pip install grpcio
-import Searchsucc_pb2 # pip install protobuf
-import Searchsucc_pb2_grpc # pip install protobuf
+import service_pb2_grpc # pip install protobuf
+import service_pb2 # pip install protobuf
+
 
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -65,11 +66,10 @@ class HTTPClient:
 
 # gRPC
 
-class NodeGRPCServer(Searchsucc_pb2_grpc.SearchsuccServicer):
+class SearchsuccService(service_pb2_grpc.SearchsuccServicer):
     def __init__(self, node):
         self.node = node
 
-    
     def LookupID(self, request, context):
         print("LookupID request received")
         keyID = request.idNode
@@ -103,7 +103,22 @@ class NodeGRPCServer(Searchsucc_pb2_grpc.SearchsuccServicer):
                     result = False
                     address = f"{self.node.succ[0]}:{self.node.succ[1]}"
 
-        return Searchsucc_pb2.LookupIDResponse(result=result, address=address)
+        return service_pb2.LookupIDResponse(result=result, address=address)
+
+class JoinnodeService(service_pb2_grpc.JoinnodeServicer):
+    def __init__(self, node):
+        self.node = node
+
+    def JoinNode(self, request, context):
+        print("JoinNode request received")
+        ip, port = request.address.split(":")
+        keyID = getHash(ip + ":" + port)
+        Oldpred = self.node.pred
+        self.node.pred = (ip, port)
+        self.node.predID = keyID
+        response = service_pb2.JoinResponse(address=f"{Oldpred[0]}:{Oldpred[1]}")
+        #falta actualizar tablas de dedos
+        return response
 
 # MOM
 
@@ -150,12 +165,8 @@ class Node:
         # type 4: updateSucc
         # type 5: updatePred
 
-        if connectionType == 0:
-            print("Connection with:", ip, ":", port)
-            print("Join network request received")
-            self.join_node((ip, port))
 
-        elif connectionType == 1:
+        if connectionType == 1:
             print("Connection with:", ip, ":", port)
             print("Upload/Download request received")
 
@@ -163,17 +174,12 @@ class Node:
             # Handle ping
             pass
         
-        elif connectionType == 3:
-            # Handle lookup request for successor
-            print("Connection with:", ip, ":", port, "for lookup")
-            self.lookupID(ip, port, dataforprocces)
-
+        # Handle update successor request
         elif connectionType == 4:
-            # Handle update successor request
            self.update_successor(ip, port)
 
+        # Handle update predecessor request
         elif connectionType == 5:
-            # Handle update predecessor request
             self.update_predecessor(ip, port)
 
         elif connectionType == 6:
@@ -200,31 +206,38 @@ class Node:
         else:
             print("Invalid choice")
 
-    def join_node(self, address):
-        ipnewnode, portnewnode = address
-        idnewnode = getHash(ipnewnode + str(portnewnode))
-        print(f"Joining network at {ipnewnode}:{portnewnode}")
-        #findind successor of new node
-        if self.succID is None:
-            self.succID = idnewnode
-            self.succ = (ipnewnode, portnewnode)
-            print(f"Successor found: {self.succID} at {self.succ}")
-        else:
-            self.getSuccessor(address, self.id)
-
     # Send join request to the node like a client to connect to the network # (CLIENT SIDE)
     def send_join_request(self, ip, port): 
-        result, address = self.getSuccessor(ip, port)
-        print(f"Successor found: {result} at {address}")
+        #obtain the id of the node to connect
+        address = self.getSuccessor(ip, port)
+        print(f"Successor found: {address}")
+        #send the join request to the node
+            # Enviando la solicitud de unión al nodo existente
+        with grpc.insecure_channel(f'{ip}:{port + 1}') as channel:
+            stub = service_pb2_grpc.JoinnodeStub(channel)  # Cambia a JoinnodeStub
+            request = service_pb2.JoinRequest(address=f"{self.ip}:{self.port}")
+            response = stub.JoinNode(request)
+        
+        print(f"My new predecessor: {response.address}")
+        #update the predecessor of the node
+        self.update_predecessor(response.address.split(":")[0], int(response.address.split(":")[1]))
+        #update the successor of the node
+        self.update_successor(address.split(":")[0], int(address.split(":")[1]))
+        #update successor of the predecessor
+        self.http_client.send_request('/connect', self.pred[0], self.pred[1], json.dumps({"ip": self.ip, "port": self.port, "connectionType": 4}))
+
 
     # Get the successor of the node # (CLIENT SIDE)
     def getSuccessor(self, ip, port):
+        searchNode = True
         keyID = self.id
-        with grpc.insecure_channel(f'{ip}:{port + 1}') as channel:
-            stub = Searchsucc_pb2_grpc.SearchsuccStub(channel)
-            request = Searchsucc_pb2.LookupIDRequest(idNode=keyID)
-            response = stub.LookupID(request)
-            return response.result, response.address
+        while searchNode:
+            with grpc.insecure_channel(f'{ip}:{port + 1}') as channel:
+                stub = service_pb2_grpc.SearchsuccStub(channel)
+                request = service_pb2.LookupIDRequest(idNode=keyID)
+                response = stub.LookupID(request)
+                searchNode = response.result
+        return response.address
 
     
     def update_successor(self, ip, port):
@@ -236,7 +249,9 @@ class Node:
         self.pred = (ip, port)
 
     def print_predecessor_successor(self):
-        pass
+        print(f"Me           N.ID: {self.id} / {self.ip}:{self.port}")
+        print(f"Predecessor  N.ID: {self.predID} / {self.pred[0]}:{self.pred[1]}")
+        print(f"Successor    N.ID: {self.predID} / {self.succ[0]}:{self.succ[1]}")
 
     def update_finger_table(self):
         pass
@@ -264,9 +279,9 @@ class Node:
         print("5. Print Finger Table\n6. Print my predecessor and successor")
 
     def start_grpc_server(self):
-        # Configuración y arranque del servidor gRPC
         self.grpc_server = grpc.server(ThreadPoolExecutor(max_workers=10))
-        Searchsucc_pb2_grpc.add_SearchsuccServicer_to_server(NodeGRPCServer(self), self.grpc_server)
+        service_pb2_grpc.add_SearchsuccServicer_to_server(SearchsuccService(self), self.grpc_server)
+        service_pb2_grpc.add_JoinnodeServicer_to_server(JoinnodeService(self),  self.grpc_server)
         self.grpc_server.add_insecure_port(f'{self.ip}:{self.port + 1}')
         self.grpc_server.start()
         print(f"gRPC server running on {self.ip}:{self.port + 1}")

@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-import Searchsucc_pb2 as Searchsucc__pb2
+import service_pb2 as service__pb2
 
 GRPC_GENERATED_VERSION = '1.65.5'
 GRPC_VERSION = grpc.__version__
@@ -20,7 +20,7 @@ except ImportError:
 if _version_not_supported:
     warnings.warn(
         f'The grpc package installed is at version {GRPC_VERSION},'
-        + f' but the generated code in Searchsucc_pb2_grpc.py depends on'
+        + f' but the generated code in service_pb2_grpc.py depends on'
         + f' grpcio>={GRPC_GENERATED_VERSION}.'
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
@@ -28,7 +28,6 @@ if _version_not_supported:
         + f' scheduled for release on {SCHEDULED_RELEASE_DATE}.',
         RuntimeWarning
     )
-
 
 class SearchsuccStub(object):
     """Servicio que expone el método lookupID
@@ -42,10 +41,9 @@ class SearchsuccStub(object):
         """
         self.LookupID = channel.unary_unary(
                 '/service.Searchsucc/LookupID',
-                request_serializer=Searchsucc__pb2.LookupIDRequest.SerializeToString,
-                response_deserializer=Searchsucc__pb2.LookupIDResponse.FromString,
+                request_serializer=service__pb2.LookupIDRequest.SerializeToString,
+                response_deserializer=service__pb2.LookupIDResponse.FromString,
                 _registered_method=True)
-
 
 class SearchsuccServicer(object):
     """Servicio que expone el método lookupID
@@ -62,8 +60,8 @@ def add_SearchsuccServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'LookupID': grpc.unary_unary_rpc_method_handler(
                     servicer.LookupID,
-                    request_deserializer=Searchsucc__pb2.LookupIDRequest.FromString,
-                    response_serializer=Searchsucc__pb2.LookupIDResponse.SerializeToString,
+                    request_deserializer=service__pb2.LookupIDRequest.FromString,
+                    response_serializer=service__pb2.LookupIDResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -92,8 +90,83 @@ class Searchsucc(object):
             request,
             target,
             '/service.Searchsucc/LookupID',
-            Searchsucc__pb2.LookupIDRequest.SerializeToString,
-            Searchsucc__pb2.LookupIDResponse.FromString,
+            service__pb2.LookupIDRequest.SerializeToString,
+            service__pb2.LookupIDResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+
+class JoinnodeStub(object):
+    """Servicio que expone el método JoinNode
+    """
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.JoinNode = channel.unary_unary(
+                '/service.Joinnode/JoinNode',
+                request_serializer=service__pb2.JoinRequest.SerializeToString,
+                response_deserializer=service__pb2.JoinResponse.FromString,
+                _registered_method=True)
+
+
+class JoinnodeServicer(object):
+    """Servicio que expone el método JoinNode
+    """
+
+    def JoinNode(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_JoinnodeServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'JoinNode': grpc.unary_unary_rpc_method_handler(
+                    servicer.JoinNode,
+                    request_deserializer=service__pb2.JoinRequest.FromString,
+                    response_serializer=service__pb2.JoinResponse.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'service.Joinnode', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers('service.Joinnode', rpc_method_handlers)
+
+
+ # This class is part of an EXPERIMENTAL API.
+class Joinnode(object):
+    """Servicio que expone el método JoinNode
+    """
+
+    @staticmethod
+    def JoinNode(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/service.Joinnode/JoinNode',
+            service__pb2.JoinRequest.SerializeToString,
+            service__pb2.JoinResponse.FromString,
             options,
             channel_credentials,
             insecure,
