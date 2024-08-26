@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package service;
+
+// Mensaje para la solicitud de lookupID
+message LookupIDRequest {
+  int32 idNode = 1;  // ID del nodo a buscar
+}
+
+// Mensaje para la respuesta de lookupID
+message LookupIDResponse {
+  bool result = 1;           // Resultado para seguir buscando o no
+  string address = 2;        // Dirección del nodo (como string)
+}
+
+// Servicio que expone el método lookupID
+service Searchsucc {
+  rpc LookupID (LookupIDRequest) returns (LookupIDResponse);
+}
+
+// Mensaje para la solicitud de JoinNode
+message JoinRequest {
+  string address = 1;  // Dirección del nodo que se quiere unir
+}
+
+// Mensaje para la respuesta de JoinNode
+message JoinResponse {         
+  string address = 1;  // Dirección del nodo existente que recibe la solicitud       
+}
+
+// Servicio que expone el método JoinNode
+service Joinnode {
+  rpc JoinNode (JoinRequest) returns (JoinResponse);
+}
