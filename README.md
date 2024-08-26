@@ -2,53 +2,54 @@
 python -m grpc_tools.protoc -I=proto --python_out=. --grpc_python_out=. proto/service.proto
 
 
-# info de la materia: # info de la materia: Tópicos Espec. en Telemática - C2466-ST0263-1716
-#
-# Estudiante(s): 
-Nicolas Tovar Almanza - ntovara@eafit.edu.co
-#
-# Profesor: 
-ALVARO ENRIQUE OSPINA SANJUAN - aeospinas@eafit.edu.co
+## Tópicos Espec. en Telemática - C2466-ST0263-1716
+
+### Estudiante(s): 
+- Nicolas Tovar Almanza - ntovara@eafit.edu.co
+- Samuel Acosta Aristizábal - sacostaa1@eafit.edu.co
+
+### Profesor: 
+Alvaro Enrique Ospina Sanjuan  - aeospinas@eafit.edu.co
 
 
-# nombre del proyecto, lab o actividad
-# Tópicos Especiales en Telemática, 2024-2 Reto No 1
-# Arquitectura P2P y Comunicación entre procesos mediante API REST, RPC y MOM
+### Nombre del proyecto, lab o actividad
 
-# 1. breve descripción de la actividad
+Tópicos Especiales en Telemática, 2024-2 Reto No 1
+- Arquitectura P2P y Comunicación entre procesos mediante API REST, RPC y MOM
 
-## 1.1. Que aspectos cumplió o desarrolló de la actividad propuesta por el profesor (requerimientos funcionales y no funcionales)
+## 1. breve descripción de la actividad
 
-## 1.2. Que aspectos NO cumplió o desarrolló de la actividad propuesta por el profesor (requerimientos funcionales y no funcionales)
+### 1.1. Que aspectos cumplió o desarrolló de la actividad propuesta por el profesor (requerimientos funcionales y no funcionales)
 
-# 2. información general de diseño de alto nivel, arquitectura, patrones, mejores prácticas utilizadas.
+### 1.2. Que aspectos NO cumplió o desarrolló de la actividad propuesta por el profesor (requerimientos funcionales y no funcionales)
 
-# 3. Descripción del ambiente de desarrollo y técnico: lenguaje de programación, librerias, paquetes, etc, con sus numeros de versiones.
+## 2. Información general de diseño de alto nivel, arquitectura, patrones, mejores prácticas utilizadas.
 
-## como se compila y ejecuta.
+## 3. Descripción del ambiente de desarrollo y técnico: lenguaje de programación, librerias, paquetes, etc, con sus numeros de versiones.
 
-## detalles del desarrollo.
-## detalles técnicos
-## descripción y como se configura los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)
-## opcional - detalles de la organización del código por carpetas o descripción de algún archivo. (ESTRUCTURA DE DIRECTORIOS Y ARCHIVOS IMPORTANTE DEL PROYECTO, comando 'tree' de linux)
-## 
-## opcionalmente - si quiere mostrar resultados o pantallazos 
+### Como se compila y ejecuta.
 
-# 4. Descripción del ambiente de EJECUCIÓN (en producción) lenguaje de programación, librerias, paquetes, etc, con sus numeros de versiones.
+### Detalles del desarrollo.
+### Detalles técnicos
+### Descripción y como se configura los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)
+### Opcional - detalles de la organización del código por carpetas o descripción de algún archivo. (ESTRUCTURA DE DIRECTORIOS Y ARCHIVOS IMPORTANTE DEL PROYECTO, comando 'tree' de linux)
 
-# IP o nombres de dominio en nube o en la máquina servidor.
+### Opcionalmente - si quiere mostrar resultados o pantallazos 
 
-## descripción y como se configura los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)
+## 4. Descripción del ambiente de EJECUCIÓN (en producción) lenguaje de programación, librerias, paquetes, etc, con sus numeros de versiones.
 
-## como se lanza el servidor.
+### IP o nombres de dominio en nube o en la máquina servidor.
 
-## una mini guia de como un usuario utilizaría el software o la aplicación
+### Descripción y como se configura los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)
 
-## opcionalmente - si quiere mostrar resultados o pantallazos 
+### Como se lanza el servidor.
 
-# 5. otra información que considere relevante para esta actividad.
+### Una mini guia de como un usuario utilizaría el software o la aplicación
 
-# referencias:
-## Chord-DHT-for-File-Sharing: https://github.com/MNoumanAbbasi/Chord-DHT-for-File-Sharing
-## sitio2-url
-## url de donde tomo info para desarrollar este proyecto
+### Opcionalmente - si quiere mostrar resultados o pantallazos 
+
+## 5. Otra información que considere relevante para esta actividad.
+
+## referencias:
+- Chord-DHT-for-File-Sharing: https://github.com/MNoumanAbbasi/Chord-DHT-for-File-Sharing
+
