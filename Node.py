@@ -40,6 +40,31 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({"status": "received"}).encode())
 
+        elif self.path == '/update_finger_table':
+
+            # Handler for finger table update requests
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data)
+            node_id = data['node_id']
+            ip = data['ip']
+            port = data['port']
+            finger_index = data['finger_index']
+
+            # Update the finger table with the new node
+            self.node.update_finger_table(Node(ip, port), finger_index)
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "finger_table_updated"}).encode())
+
+        else:
+            # Unrecognized route
+            self.send_response(404)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "not found"}).encode())
+
 import http.client
 import json
 
@@ -170,7 +195,7 @@ class Node:
 
         elif connectionType == 4:
             # Handle update successor request
-           self.update_successor(ip, port)
+            self.update_successor(ip, port)
 
         elif connectionType == 5:
             # Handle update predecessor request
@@ -204,13 +229,25 @@ class Node:
         ipnewnode, portnewnode = address
         idnewnode = getHash(ipnewnode + str(portnewnode))
         print(f"Joining network at {ipnewnode}:{portnewnode}")
+
         #findind successor of new node
         if self.succID is None:
             self.succID = idnewnode
             self.succ = (ipnewnode, portnewnode)
             print(f"Successor found: {self.succID} at {self.succ}")
+        #if only one node in the network
         else:
-            self.getSuccessor(address, self.id)
+            result, address = self.getSuccessor(ipnewnode, portnewnode)
+            if result:
+                ip_succ, port_succ = address.split(':')
+                self.update_successor(ip_succ, int(port_succ))
+
+        #update finger table of new node
+        self.update_finger_table()
+
+        #update finger table of other nodes
+        self.update_others_finger_table()
+
 
     # Send join request to the node like a client to connect to the network # (CLIENT SIDE)
     def send_join_request(self, ip, port): 
@@ -219,11 +256,14 @@ class Node:
 
     # Get the successor of the node # (CLIENT SIDE)
     def getSuccessor(self, ip, port):
+        # if result == False, then the node is foundend 
         keyID = self.id
+        print(f"Attempting to find successor for keyID: {keyID}")
         with grpc.insecure_channel(f'{ip}:{port + 1}') as channel:
             stub = Searchsucc_pb2_grpc.SearchsuccStub(channel)
             request = Searchsucc_pb2.LookupIDRequest(idNode=keyID)
             response = stub.LookupID(request)
+            print(f"LookupID response: result={response.result}, address={response.address}")
             return response.result, response.address
 
     
@@ -236,16 +276,40 @@ class Node:
         self.pred = (ip, port)
 
     def print_predecessor_successor(self):
-        pass
+        print(f"Predecessor: {self.predecessor}")
+        print(f"Successor: {self.succ}")
 
     def update_finger_table(self):
-        pass
+
+        for i in range(m):
+            start = (self.id + 2**i) % MAX_NODES
+            result, address = self.find_successor(start)
+            if result:
+                self.finger_table[start] = address
+        print(f"Finger table updated: {self.finger_table}")
 
     def update_others_finger_table(self):
-        pass
+
+        for i in range(m):
+            pred_result, pred_address = self.find_predecessor((self.id - 2**i + MAX_NODES) % MAX_NODES)
+            if pred_result:
+                ip, port = pred_address.split(':')
+                self.send_update_finger_request(ip, port, self, i)
+
+    def send_update_finger_request(self, ip, port, s, i):
+        #Send a request to update the finger table of another node
+        data = {
+            'node_id': s.id,
+            'ip': s.ip,
+            'port': s.port,
+            'finger_index': i
+        }
+        self.http_client.send_request('/update_finger_table', ip, port, json.dumps(data))
 
     def print_finger_table(self):
-        pass
+        print("Finger Table:")
+        for i, entry in enumerate(self.finger_table):
+            print(f"Index {i}: {entry}")
 
     def upload_file(self):
         pass
@@ -257,7 +321,30 @@ class Node:
         pass
 
     def leave_network(self):
-        pass
+
+        # Notify other nodes to update their finger tables
+        self.notify_others_on_leave()
+
+        # Perform any necessary cleanup here
+        print(f"Node {self.ip}:{self.port} leaving the network.")
+
+        # Close the gRPC server
+        if self.grpc_server:
+            self.grpc_server.stop(0)
+
+    def notify_others_on_leave(self):
+
+        for i in range(m):
+            pred_result, pred_address = self.find_predecessor((self.id - 2**i + MAX_NODES) % MAX_NODES)
+            if pred_result:
+                ip, port = pred_address.split(':')
+                data = {
+                    'node_id': self.succID,
+                    'ip': self.succ[0],
+                    'port': self.succ[1],
+                    'finger_index': i
+                }
+                self.http_client.send_request('/update_finger_table', ip, int(port), json.dumps(data))
 
     def show_menu(self):
         print("\n1. Join Network\n2. Leave Network\n3. Upload File\n4. Download File")
