@@ -32,3 +32,19 @@ message JoinResponse {
 service Joinnode {
   rpc JoinNode (JoinRequest) returns (JoinResponse);
 }
+
+// Mensaje para la solicitud de UpdateSuccessor
+message UpdateSuccessorRequest {
+  string new_succ_ip = 1;  // Dirección IP del nuevo sucesor
+  int32 new_succ_port = 2; // Puerto del nuevo sucesor
+}
+
+// Mensaje para la respuesta de UpdateSuccessor
+message UpdateSuccessorResponse {
+  string status = 1; // Estado de la actualización
+}
+
+// Servicio que expone el método UpdateSuccessor
+service UpdateSuccessor {
+  rpc UpdateSuccessor (UpdateSuccessorRequest) returns (UpdateSuccessorResponse);
+}
