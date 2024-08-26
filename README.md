@@ -17,7 +17,7 @@ Alvaro Enrique Ospina Sanjuan  - aeospinas@eafit.edu.co
 Tópicos Especiales en Telemática, 2024-2 Reto No 1
 - Arquitectura P2P y Comunicación entre procesos mediante API REST, RPC y MOM
 
-## 1. breve descripción de la actividad
+## 1. Breve descripción de la actividad
 
 ### 1.1. Que aspectos cumplió o desarrolló de la actividad propuesta por el profesor (requerimientos funcionales y no funcionales)
 
@@ -50,6 +50,6 @@ Tópicos Especiales en Telemática, 2024-2 Reto No 1
 
 ## 5. Otra información que considere relevante para esta actividad.
 
-## referencias:
+## Referencias:
 - Chord-DHT-for-File-Sharing: https://github.com/MNoumanAbbasi/Chord-DHT-for-File-Sharing
 
