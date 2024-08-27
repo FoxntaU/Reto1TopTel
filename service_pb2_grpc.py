@@ -5,8 +5,10 @@ import warnings
 
 import service_pb2 as service__pb2
 
-GRPC_GENERATED_VERSION = '1.66.0'
+GRPC_GENERATED_VERSION = '1.65.5'
 GRPC_VERSION = grpc.__version__
+EXPECTED_ERROR_RELEASE = '1.66.0'
+SCHEDULED_RELEASE_DATE = 'August 6, 2024'
 _version_not_supported = False
 
 try:
@@ -16,12 +18,15 @@ except ImportError:
     _version_not_supported = True
 
 if _version_not_supported:
-    raise RuntimeError(
+    warnings.warn(
         f'The grpc package installed is at version {GRPC_VERSION},'
         + f' but the generated code in service_pb2_grpc.py depends on'
         + f' grpcio>={GRPC_GENERATED_VERSION}.'
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
+        + f' This warning will become an error in {EXPECTED_ERROR_RELEASE},'
+        + f' scheduled for release on {SCHEDULED_RELEASE_DATE}.',
+        RuntimeWarning
     )
 
 
@@ -175,8 +180,8 @@ class Joinnode(object):
             _registered_method=True)
 
 
-class UpdateSuccessorStub(object):
-    """Servicio que expone el método UpdateSuccessor
+class UpdatetableStub(object):
+    """Servicio que expone el método UpdateTable
     """
 
     def __init__(self, channel):
@@ -185,45 +190,45 @@ class UpdateSuccessorStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.UpdateSuccessor = channel.unary_unary(
-                '/service.UpdateSuccessor/UpdateSuccessor',
-                request_serializer=service__pb2.UpdateSuccessorRequest.SerializeToString,
-                response_deserializer=service__pb2.UpdateSuccessorResponse.FromString,
+        self.UpdateTable = channel.unary_unary(
+                '/service.Updatetable/UpdateTable',
+                request_serializer=service__pb2.UpdateTableRequest.SerializeToString,
+                response_deserializer=service__pb2.UpdateTableResponse.FromString,
                 _registered_method=True)
 
 
-class UpdateSuccessorServicer(object):
-    """Servicio que expone el método UpdateSuccessor
+class UpdatetableServicer(object):
+    """Servicio que expone el método UpdateTable
     """
 
-    def UpdateSuccessor(self, request, context):
+    def UpdateTable(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
 
-def add_UpdateSuccessorServicer_to_server(servicer, server):
+def add_UpdatetableServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'UpdateSuccessor': grpc.unary_unary_rpc_method_handler(
-                    servicer.UpdateSuccessor,
-                    request_deserializer=service__pb2.UpdateSuccessorRequest.FromString,
-                    response_serializer=service__pb2.UpdateSuccessorResponse.SerializeToString,
+            'UpdateTable': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateTable,
+                    request_deserializer=service__pb2.UpdateTableRequest.FromString,
+                    response_serializer=service__pb2.UpdateTableResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'service.UpdateSuccessor', rpc_method_handlers)
+            'service.Updatetable', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('service.UpdateSuccessor', rpc_method_handlers)
+    server.add_registered_method_handlers('service.Updatetable', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
-class UpdateSuccessor(object):
-    """Servicio que expone el método UpdateSuccessor
+class Updatetable(object):
+    """Servicio que expone el método UpdateTable
     """
 
     @staticmethod
-    def UpdateSuccessor(request,
+    def UpdateTable(request,
             target,
             options=(),
             channel_credentials=None,
@@ -236,9 +241,9 @@ class UpdateSuccessor(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/service.UpdateSuccessor/UpdateSuccessor',
-            service__pb2.UpdateSuccessorRequest.SerializeToString,
-            service__pb2.UpdateSuccessorResponse.FromString,
+            '/service.Updatetable/UpdateTable',
+            service__pb2.UpdateTableRequest.SerializeToString,
+            service__pb2.UpdateTableResponse.FromString,
             options,
             channel_credentials,
             insecure,

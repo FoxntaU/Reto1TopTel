@@ -130,16 +130,18 @@ class JoinnodeService(service_pb2_grpc.JoinnodeServicer):
 
         return response
 
-class TableService(service_pb2_grpc.TableServicer):
+class TableService(service_pb2_grpc.UpdatetableServicer):
     def __init__(self, node):
         self.node = node
 
-    def UpdateFingerTable(self, request, context):
-        print("UpdateFingerTable request received")
+    def UpdateTable(self, request, context):
+        print("UpdateTable request received")
         
-        self.node.UpdateFingerTable()
-        #retornar el sucesor 
-        return service_pb2.UpdateFingerTableResponse(status=str(self.node.succ))
+        # Actualizar la tabla de enrutamiento (Finger Table)
+        self.node.update_finger_table()
+        
+        # Retornar el sucesor como parte de la respuesta
+        return service_pb2.UpdateTableResponse(address=str(self.node.succ[0]) + ":" + str(self.node.succ[1]))
 
 # Node class to handle all the functionalities of a node in the Chord network
 
@@ -208,7 +210,7 @@ class Node:
     # Send join request to the node like a client to connect to the network # (CLIENT SIDE)
     def send_join_request(self, ip, port): 
         #obtain the id of the node to connect
-        address = self.getSuccessor(ip, port)
+        address = self.getSuccessor(ip, port, self.id)
         print(f"Successor found: {address}")
         #send the join request to the node
             # Enviando la solicitud de unión al nodo existente
@@ -229,9 +231,8 @@ class Node:
         self.http_client.send_request('/connect', self.pred[0], self.pred[1], json.dumps({"ip": self.ip, "port": self.port, "connectionType": 4}))
 
     # Get the successor of the node # (CLIENT SIDE)
-    def getSuccessor(self, ip, port):
+    def getSuccessor(self, ip, port, keyID):
         searchNode = True
-        keyID = self.id
         while searchNode:
             with grpc.insecure_channel(f'{ip}:{port + 1}') as channel:
                 stub = service_pb2_grpc.SearchsuccStub(channel)
@@ -254,19 +255,37 @@ class Node:
         print(f"Successor    N.ID: {self.succID} / {self.succ[0]}:{self.succ[1]}")
     
     def update_finger_table(self):
-        for i in range(m):
-            start = (self.id + 2**i) % MAX_NODES
-            result, address = self.find_successor(start)
-            if result:
-                self.finger_table[start] = address
-        print(f"Finger table updated: {self.finger_table}")
+        for i in range(MAX_NODES):
+            entryId = (self.id + (2 ** i)) % MAX_NODES
+            # If only one node in network
+            if self.succ == self.address:
+                self.finger_table[entryId] = (self.id, self.address)
+                continue
+            # If multiple nodes in network, we find succ for each entryID
+            address = self.getSuccessor(self.succ[0],self.succ[1], entryId)
+            recvId = getHash(address)
+            self.finger_table[entryId] = (recvId, address)
+
+        print(f"Update Finger table: {self.finger_table}")
+
 
     def update_others_finger_table(self):
-        for i in range(m):
-            start = (self.id + 2**i) % MAX_NODES
-            pred_ip, pred_port = self.find_predecessor(start)
-            self.send_update_finger_request(pred_ip, pred_port, self, i)
-        print(f"Finger table updated: {self.finger_table}")
+        here = self.succ  
+        while True:
+            if here == self.address:
+                break
+            try:
+                with grpc.insecure_channel(f'{here[0]}:{here[1] + 1}') as channel:
+                    stub = service_pb2_grpc.UpdatetableStub(channel)
+                    request = service_pb2.UpdateTableRequest()
+                    response = stub.UpdateTable(request)
+                    pred_ip, pred_port = response.address.split(":")
+                    here = (pred_ip, int(pred_port))
+                    if here == self.address:
+                        break
+            except Exception as e:
+                print(f"An error occurred: {e}")
+                break
 
     def print_finger_table(self):
         print("Finger Table:")
@@ -281,7 +300,7 @@ class Node:
         self.grpc_server = grpc.server(ThreadPoolExecutor(max_workers=10))
         service_pb2_grpc.add_SearchsuccServicer_to_server(SearchsuccService(self), self.grpc_server)
         service_pb2_grpc.add_JoinnodeServicer_to_server(JoinnodeService(self),  self.grpc_server)
-        service_pb2_grpc.add_TableServicer_to_server(TableService(self), self.grpc_server)
+        service_pb2_grpc.add_UpdatetableServicer_to_server(TableService(self), self.grpc_server)
         self.grpc_server.add_insecure_port(f'{self.ip}:{self.port + 1}')
         self.grpc_server.start()
         print(f"gRPC server running on {self.ip}:{self.port + 1}")
