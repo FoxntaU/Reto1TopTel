@@ -72,31 +72,35 @@ class HTTPClient:
 class SearchsuccService(service_pb2_grpc.SearchsuccServicer):
     def __init__(self, node):
         self.node = node
-
     def LookupID(self, request, context):
         print("LookupID request received")
         keyID = request.idNode
-        if self.node.id == keyID:  # Si el ID coincide con el ID del nodo actual
+        if self.node.id == keyID:
+            print("Caso 0: Si el ID coincide con el ID del nodo actual")
             result = False
             address = f"{self.node.ip}:{self.node.port}"
-        elif self.node.succID == self.node.id:  # Si solo hay un nodo
+        elif self.node.succID == self.node.id:
+            print("Caso 1: Si solo hay un nodo")
             result = False
             address = f"{self.node.ip}:{self.node.port}"
-        elif self.node.id > keyID:  # Si el ID es menor, consultar el predecesor
+        elif self.node.id > keyID:
+            print("Caso 2: Si el ID es menor, consultar el predecesor")
             if self.node.predID < keyID:
                 result = False
                 address = f"{self.node.ip}:{self.node.port}"
-            elif self.node.predID > self.node.id:
+            if self.node.predID == self.node.id:
                 result = False
-                address = f"{self.node.ip}:{self.node.port}"
+                address = f"{self.node.id[0]}:{self.node.id[1]}"
             else:
                 result = True
                 address = f"{self.node.pred[0]}:{self.node.pred[1]}"
-        else:  # Si el ID es mayor, consultar la tabla de dedos
+        else:
+            print("Caso 3: Si el ID es mayor, consultar la tabla de dedos")
             if self.node.id > self.node.succID:
                 result = False
                 address = f"{self.node.succ[0]}:{self.node.succ[1]}"
             else:
+                value = ""
                 for key, value in self.node.finger_table.items():
                     if key >= keyID:
                         result = True
@@ -105,7 +109,7 @@ class SearchsuccService(service_pb2_grpc.SearchsuccServicer):
                 else:
                     result = False
                     address = f"{self.node.succ[0]}:{self.node.succ[1]}"
-
+    
         return service_pb2.LookupIDResponse(result=result, address=address)
 
 class JoinnodeService(service_pb2_grpc.JoinnodeServicer):
@@ -122,12 +126,13 @@ class JoinnodeService(service_pb2_grpc.JoinnodeServicer):
         response = service_pb2.JoinResponse(address=f"{Oldpred[0]}:{Oldpred[1]}")
 
         def post_response_operations():
-            time.sleep(1)
+            time.sleep(0.1)
             self.node.update_finger_table()
             self.node.update_others_finger_table()
 
         threading.Thread(target=post_response_operations).start()
 
+        # respondo con el predecesor actual
         return response
 
 class TableService(service_pb2_grpc.UpdatetableServicer):
@@ -228,6 +233,7 @@ class Node:
         self.update_successor(succ_ip, int(succ_port))
     
         # Actualiza el sucesor del predecesor
+        print("Updating predecessor's successor")
         self.http_client.send_request('/connect', self.pred[0], self.pred[1], json.dumps({"ip": self.ip, "port": self.port, "connectionType": 4}))
 
     # Get the successor of the node # (CLIENT SIDE)
@@ -255,6 +261,7 @@ class Node:
         print(f"Successor    N.ID: {self.succID} / {self.succ[0]}:{self.succ[1]}")
     
     def update_finger_table(self):
+        print("Updating finger table")
         for i in range(MAX_NODES):
             entryId = (self.id + (2 ** i)) % MAX_NODES
             # If only one node in network
@@ -264,12 +271,14 @@ class Node:
             # If multiple nodes in network, we find succ for each entryID
             address = self.getSuccessor(self.succ[0],self.succ[1], entryId)
             recvId = getHash(address)
+            address = address.split(":")
             self.finger_table[entryId] = (recvId, address)
 
         print(f"Update Finger table: {self.finger_table}")
 
 
     def update_others_finger_table(self):
+        print("Updating others finger table")
         here = self.succ  
         while True:
             if here == self.address:
