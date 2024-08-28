@@ -229,11 +229,12 @@ class Node:
     # Send join request to the node like a client to connect to the network # (CLIENT SIDE)
     def send_join_request(self, ip, port): 
         #obtain the id of the node to connect
-        address = self.getSuccessor(ip, port, self.id)
-        print(f"Successor found: {address}")
+        succ = self.getSuccessor(ip, port, self.id)
+        succ_ip, succ_port = succ.split(":")
+        print(f"Successor found: {succ}")
         #send the join request to the node
             # Enviando la solicitud de unión al nodo existente
-        with grpc.insecure_channel(f'{ip}:{port + 1}') as channel:
+        with grpc.insecure_channel(f'{succ_ip}:{int(succ_port) + 1}') as channel:
             stub = service_pb2_grpc.JoinnodeStub(channel)
             request = service_pb2.JoinRequest(address=f"{self.ip}:{self.port}")
             response = stub.JoinNode(request)
@@ -242,8 +243,6 @@ class Node:
         # Actualiza el predecesor y sucesor de acuerdo a la respuesta
         pred_ip, pred_port = response.address.split(":")
         self.update_predecessor(pred_ip, int(pred_port))
-    
-        succ_ip, succ_port = address.split(":")
         self.update_successor(succ_ip, int(succ_port))
     
         # Actualiza el sucesor del predecesor
