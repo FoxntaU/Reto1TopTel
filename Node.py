@@ -75,6 +75,15 @@ class SearchsuccService(service_pb2_grpc.SearchsuccServicer):
     def LookupID(self, request, context):
         print("LookupID request received")
         keyID = request.idNode
+
+        print(f"keyID: {keyID}")
+        print(f"self.id: {self.node.id}")
+        print(f"self.succID: {self.node.succID}")
+        print(f"self.predID: {self.node.predID}")
+        print(f"self.succ: {self.node.succ}")
+        print(f"self.pred: {self.node.pred}")
+        print(f"self.finger_table: {self.node.finger_table}")
+        
         if self.node.id == keyID:
             print("Caso 0: Si el ID coincide con el ID del nodo actual")
             result = False
