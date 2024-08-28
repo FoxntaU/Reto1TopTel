@@ -200,8 +200,10 @@ class Node:
             # Handle ping
             pass
         elif connectionType == 4:
+            # opcion 1 
             self.update_successor(ip, int(port))
         elif connectionType == 5:
+            # opcion cualquiera 2 
             self.update_predecessor(ip, int(port))
 
     def asAClientThread(self):
