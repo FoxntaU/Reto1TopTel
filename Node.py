@@ -151,8 +151,8 @@ class TableService(service_pb2_grpc.UpdatetableServicer):
 IP = "127.0.0.1"
 PORT = 2000
 
-m = 10
-MAX_NODES = 2 ** m
+MAX_BITS = 10
+MAX_NODES = 2 ** MAX_BITS
 
 def getHash(key):
     result = hashlib.sha1(key.encode())
@@ -260,10 +260,11 @@ class Node:
     
     def update_finger_table(self):
         print("Updating finger table")
-        for i in range(MAX_NODES):
+        for i in range(MAX_BITS):
             entryId = (self.id + (2 ** i)) % MAX_NODES
             # If only one node in network
             if self.succ == self.address:
+                print("Only one node in network")
                 self.finger_table[entryId] = (self.id, self.address)
                 continue
             # If multiple nodes in network, we find succ for each entryID
