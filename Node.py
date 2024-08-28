@@ -99,7 +99,7 @@ class SearchsuccService(service_pb2_grpc.SearchsuccServicer):
                 address = f"{self.node.ip}:{self.node.port}"
             elif self.node.predID > self.node.id:
                 result = False
-                address = f"{self.node.id[0]}:{self.node.id[1]}"
+                address = f"{self.node.ip}:{self.node.port}"
             else:
                 result = True
                 address = f"{self.node.pred[0]}:{self.node.pred[1]}"
