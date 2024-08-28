@@ -11,7 +11,6 @@ import service_pb2_grpc # pip install protobuf
 import service_pb2 # pip install protobuf
 import time
 from http.server import ThreadingHTTPServer
-
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 # REST API
@@ -130,8 +129,9 @@ class JoinnodeService(service_pb2_grpc.JoinnodeServicer):
         self.node = node
 
     def JoinNode(self, request, context):
-        print("JoinNode request received")
         ip, port = request.address.split(":")
+        print("Connection with:", ip, ":", port)
+        print("JoinNode request received")
         keyID = getHash(ip + ":" + port)
         Oldpred = self.node.pred
         self.node.pred = (ip, port)
@@ -140,7 +140,9 @@ class JoinnodeService(service_pb2_grpc.JoinnodeServicer):
 
         def post_response_operations():
             time.sleep(2)
+            print("Updating F Table in Join Node")
             self.node.update_finger_table()
+            print("Updating other F Tables in Join Node")
             self.node.update_others_finger_table()
 
         threading.Thread(target=post_response_operations).start()
@@ -153,11 +155,8 @@ class TableService(service_pb2_grpc.UpdatetableServicer):
         self.node = node
 
     def UpdateTable(self, request, context):
-        print("UpdateTable request received")
-        
-        # Actualizar la tabla de enrutamiento (Finger Table)
+        print("Sending my succ to update finger table")
         self.node.update_finger_table()
-        
         # Retornar el sucesor como parte de la respuesta
         return service_pb2.UpdateTableResponse(address=str(self.node.succ[0]) + ":" + str(self.node.succ[1]))
 
@@ -252,12 +251,16 @@ class Node:
     # Get the successor of the node # (CLIENT SIDE)
     def getSuccessor(self, ip, port, keyID):
         print("Getting successor")
+        ipsearch = ip
+        portsearch = port
         searchNode = True
         while searchNode:
-            with grpc.insecure_channel(f'{ip}:{port + 1}') as channel:
+            with grpc.insecure_channel(f'{ipsearch}:{int(portsearch) + 1}') as channel:
                 stub = service_pb2_grpc.SearchsuccStub(channel)
+                print(f"sending sDataList [3, {keyID}]")
                 request = service_pb2.LookupIDRequest(idNode=keyID)
                 response = stub.LookupID(request)
+                ipsearch, portsearch = response.address.split(":")
                 searchNode = response.result
         return response.address
 
@@ -275,7 +278,7 @@ class Node:
         print(f"Successor    N.ID: {self.succID} / {self.succ[0]}:{self.succ[1]}")
     
     def update_finger_table(self):
-        print("Updating finger table")
+        print("Updating F Table")
         for i in range(MAX_BITS):
             entryId = (self.id + (2 ** i)) % MAX_NODES
             # If only one node in network
@@ -285,16 +288,16 @@ class Node:
                 continue
             # If multiple nodes in network, we find succ for each entryID
             address = self.getSuccessor(self.succ[0],self.succ[1],entryId)
-            print(f"Successor for {entryId}: {address}")
             recvId = getHash(address)
             address = address.split(":")
+            address = tuple(map(int, address))
             self.finger_table[entryId] = (recvId, address)
 
         print(f"Update Finger table: {self.finger_table}")
 
 
     def update_others_finger_table(self):
-        print("Updating others finger table")
+        print("Updating other F Tables")
         here = self.succ  
         while True:
             if here == self.address:
@@ -306,7 +309,7 @@ class Node:
                     response = stub.UpdateTable(request)
                     succ_ip, succ_port = response.address.split(":")
                     here = (succ_ip, int(succ_port))
-                    if here == self.address:
+                    if here == self.succ:
                         break
             except Exception as e:
                 print(f"An error occurred: {e}")
