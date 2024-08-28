@@ -97,9 +97,11 @@ class SearchsuccService(service_pb2_grpc.SearchsuccServicer):
         else:
             print("Caso 3: Si el ID es mayor, consultar la tabla de dedos")
             if self.node.id > self.node.succID:
+                print("Caso 3.1: Si el ID es mayor que el sucesor")
                 result = False
                 address = f"{self.node.succ[0]}:{self.node.succ[1]}"
             else:
+                print("Caso 3.2: Si el ID es menor que el sucesor")
                 value = ()
                 for key, value in self.node.finger_table.items():
                     if key >= keyID:
@@ -107,6 +109,9 @@ class SearchsuccService(service_pb2_grpc.SearchsuccServicer):
                 value = self.node.succ
                 result = True
                 address = f"{value[0]}:{value[1]}"
+
+
+        print(f"Result: {result}, Address: {address}")
     
         return service_pb2.LookupIDResponse(result=result, address=address)
 
@@ -243,6 +248,7 @@ class Node:
                 request = service_pb2.LookupIDRequest(idNode=keyID)
                 response = stub.LookupID(request)
                 searchNode = response.result
+                print(f"SearchNode: {searchNode} type; {type(searchNode)}")
         return response.address
 
     def update_successor(self, ip, port):
@@ -269,6 +275,7 @@ class Node:
                 continue
             # If multiple nodes in network, we find succ for each entryID
             address = self.getSuccessor(self.succ[0],self.succ[1], entryId)
+            print(f"Successor for {entryId}: {address}")
             recvId = getHash(address)
             address = address.split(":")
             self.finger_table[entryId] = (recvId, address)
