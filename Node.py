@@ -316,9 +316,9 @@ class Node:
                 break
 
     def print_finger_table(self):
-        print("Finger Table:")
-        for i, (start, entry) in enumerate(self.finger_table.items()):
-            print(f"Index {i} (start {start}): Node {entry}")
+        print("Printing F Table")
+        for key, value in self.finger_table.items(): 
+            print("KeyID:", key, "Value", value)
 
     def show_menu(self):
         print("\n1. Join Network\n2. Leave Network\n3. Upload File\n4. Download File")
