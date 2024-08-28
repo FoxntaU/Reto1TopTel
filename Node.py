@@ -97,7 +97,7 @@ class SearchsuccService(service_pb2_grpc.SearchsuccServicer):
             if self.node.predID < keyID:
                 result = False
                 address = f"{self.node.ip}:{self.node.port}"
-            if self.node.predID == self.node.id:
+            elif self.node.predID > self.node.id:
                 result = False
                 address = f"{self.node.id[0]}:{self.node.id[1]}"
             else:
@@ -289,8 +289,8 @@ class Node:
             # If multiple nodes in network, we find succ for each entryID
             address = self.getSuccessor(self.succ[0],self.succ[1],entryId)
             recvId = getHash(address)
-            address = address.split(":")
-            address = tuple(map(int, address))
+            ipres, portres = address.split(":")
+            address = (ipres, int(portres))
             self.finger_table[entryId] = (recvId, address)
 
         print(f"Update Finger table: {self.finger_table}")
