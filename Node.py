@@ -100,15 +100,13 @@ class SearchsuccService(service_pb2_grpc.SearchsuccServicer):
                 result = False
                 address = f"{self.node.succ[0]}:{self.node.succ[1]}"
             else:
-                value = ""
+                value = ()
                 for key, value in self.node.finger_table.items():
                     if key >= keyID:
-                        result = True
-                        address = f"{value[0]}:{value[1]}"
                         break
-                else:
-                    result = False
-                    address = f"{self.node.succ[0]}:{self.node.succ[1]}"
+                value = self.node.succ
+                result = True
+                address = f"{value[0]}:{value[1]}"
     
         return service_pb2.LookupIDResponse(result=result, address=address)
 
