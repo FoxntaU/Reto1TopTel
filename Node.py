@@ -73,9 +73,9 @@ class SearchsuccService(service_pb2_grpc.SearchsuccServicer):
     def __init__(self, node):
         self.node = node
     def LookupID(self, request, context):
-        print("LookupID request received")
+        # print(f'LookupID request received: {request.idNode}')
         keyID = request.idNode
-
+        '''
         print(f"keyID: {keyID}")
         print(f"self.id: {self.node.id}")
         print(f"self.succID: {self.node.succID}")
@@ -83,17 +83,18 @@ class SearchsuccService(service_pb2_grpc.SearchsuccServicer):
         print(f"self.succ: {self.node.succ}")
         print(f"self.pred: {self.node.pred}")
         print(f"self.finger_table: {self.node.finger_table}")
-        
+        '''
+
         if self.node.id == keyID:
-            print("Caso 0: Si el ID coincide con el ID del nodo actual")
+            # print("Caso 0: Si el ID coincide con el ID del nodo actual")
             result = False
             address = f"{self.node.ip}:{self.node.port}"
         elif self.node.succID == self.node.id:
-            print("Caso 1: Si solo hay un nodo")
+            # print("Caso 1: Si solo hay un nodo")
             result = False
             address = f"{self.node.ip}:{self.node.port}"
         elif self.node.id > keyID:
-            print("Caso 2: Si el ID es menor, consultar el predecesor")
+            # print("Caso 2: Si el ID es menor, consultar el predecesor")
             if self.node.predID < keyID:
                 result = False
                 address = f"{self.node.ip}:{self.node.port}"
@@ -104,13 +105,13 @@ class SearchsuccService(service_pb2_grpc.SearchsuccServicer):
                 result = True
                 address = f"{self.node.pred[0]}:{self.node.pred[1]}"
         else:
-            print("Caso 3: Si el ID es mayor, consultar la tabla de dedos")
+            # print("Caso 3: Si el ID es mayor, consultar la tabla de dedos")
             if self.node.id > self.node.succID:
-                print("Caso 3.1: Si el ID es mayor que el sucesor")
+                # print("Caso 3.1: Si el ID es mayor que el sucesor")
                 result = False
                 address = f"{self.node.succ[0]}:{self.node.succ[1]}"
             else:
-                print("Caso 3.2: Si el ID es menor que el sucesor")
+                # print("Caso 3.2: Si el ID es menor que el sucesor")
                 value = ()
                 for key, value in self.node.finger_table.items():
                     if key >= keyID:
@@ -119,9 +120,8 @@ class SearchsuccService(service_pb2_grpc.SearchsuccServicer):
                 result = True
                 address = f"{value[0]}:{value[1]}"
 
+        # print(f"Result: {result}, Address: {address}")
 
-        print(f"Result: {result}, Address: {address}")
-    
         return service_pb2.LookupIDResponse(result=result, address=address)
 
 class JoinnodeService(service_pb2_grpc.JoinnodeServicer):
@@ -160,6 +160,33 @@ class TableService(service_pb2_grpc.UpdatetableServicer):
         # Retornar el sucesor como parte de la respuesta
         return service_pb2.UpdateTableResponse(address=str(self.node.succ[0]) + ":" + str(self.node.succ[1]))
 
+class MessageService(service_pb2_grpc.UploadMessageServicer):
+    def __init__(self, node):
+        self.node = node
+
+    def UploadMessage(self, request, context):
+        print("Upload message request received")
+        message = request.message
+        message_name = request.message_name
+        self.node.messages[message_name] = message
+        print(f"Message uploaded: {message_name}")
+        return service_pb2.UploadMessageResponse(saved=True)
+    
+class MessageDService(service_pb2_grpc.DownloadMessageServicer):
+    def __init__(self, node):
+        self.node = node
+
+    def DownloadMessage(self, request, context):
+        print("Download message request received")
+        message_name = request.message_name
+        message = self.node.messages[message_name] if message_name in self.node.messages else None
+        if message:
+            print(f"Message found: {message_name}")
+            return service_pb2.DownloadMessageResponse(message=message)
+        else:
+            print(f"Message not found: {message_name}")
+            return service_pb2.DownloadMessageResponse(message="Not found")
+
 # Node class to handle all the functionalities of a node in the Chord network
 
 IP = "127.0.0.1"
@@ -174,7 +201,6 @@ def getHash(key):
 
 class Node:
     def __init__(self, ip, port):
-        self.filenameList = []
         self.ip = ip
         self.port = port
         self.address = (ip, port)
@@ -184,6 +210,7 @@ class Node:
         self.succ = (self.ip, self.port)
         self.succID = self.id
         self.finger_table = OrderedDict()
+        self.messages = {}
         self.http_client = HTTPClient(ip, port)
         self.grpc_server = None
 
@@ -196,16 +223,9 @@ class Node:
         server.serve_forever()
 
     def connection_thread(self, ip, port, connectionType, dataforprocces):
-        if connectionType == 2:
-            # Handle ping
-            pass
-        elif connectionType == 4:
-            # opcion 1 
+        if connectionType == 4:
             self.update_successor(ip, int(port))
-        elif connectionType == 5:
-            # opcion cualquiera 2 
-            self.update_predecessor(ip, int(port))
-
+        
     def asAClientThread(self):
         self.show_menu()
         choice = int(input("Enter your choice: "))
@@ -216,24 +236,48 @@ class Node:
         elif choice == 2:
             self.leave_network()
         elif choice == 3:
-            self.upload_file()
+            message_name = input("Enter message name: ")
+            message = input("Enter message: ")
+            message_id = getHash(message_name)
+            addres = self.getSuccessor(self.address[0], self.address[1], message_id)
+            ip, port = addres.split(":")
+            self.upload_message(ip, int(port), message_name, message)
         elif choice == 4:
-            self.download_file()
+            message_name = input("Enter message name: ")
+            message_id = getHash(message_name)
+            addres = self.getSuccessor(self.address[0], self.address[1], message_id)
+            ip, port = addres.split(":")
+            self.download_message(ip, int(port), message_name)
         elif choice == 5:
             self.print_finger_table()
         elif choice == 6:
             self.print_predecessor_successor()
+        elif choice == 7:
+            for key, value in self.messages.items():
+                print(f"Message name: {key}, Message: {value}, Message ID: {getHash(key)}")
         else:
             print("Invalid choice")
 
-    # Send join request to the node like a client to connect to the network # (CLIENT SIDE)
+    def upload_message(self, ip, port, message_name, message):
+        print("Uploading message")
+        with grpc.insecure_channel(f'{ip}:{int(port) + 1}') as channel:
+            stub = service_pb2_grpc.UploadMessageStub(channel)
+            request = service_pb2.UploadMessageRequest(message=message, message_name=message_name)
+            response = stub.UploadMessage(request)
+            print("Upload status: " + str(response.saved))
+
+    def download_message(self, ip, port, message_name):
+        print("Downloading message")
+        with grpc.insecure_channel(f'{ip}:{int(port) + 1}') as channel:
+            stub = service_pb2_grpc.DownloadMessageStub(channel)
+            request = service_pb2.DownloadMessageRequest(message_name=message_name)
+            response = stub.DownloadMessage(request)
+            print("Message:", response.message)
+
     def send_join_request(self, ip, port): 
-        #obtain the id of the node to connect
         succ = self.getSuccessor(ip, port, self.id)
         succ_ip, succ_port = succ.split(":")
         print(f"Successor found: {succ}")
-        #send the join request to the node
-            # Enviando la solicitud de unión al nodo existente
         with grpc.insecure_channel(f'{succ_ip}:{int(succ_port) + 1}') as channel:
             stub = service_pb2_grpc.JoinnodeStub(channel)
             request = service_pb2.JoinRequest(address=f"{self.ip}:{self.port}")
@@ -251,14 +295,13 @@ class Node:
 
     # Get the successor of the node # (CLIENT SIDE)
     def getSuccessor(self, ip, port, keyID):
-        print("Getting successor")
         ipsearch = ip
         portsearch = port
         searchNode = True
         while searchNode:
             with grpc.insecure_channel(f'{ipsearch}:{int(portsearch) + 1}') as channel:
                 stub = service_pb2_grpc.SearchsuccStub(channel)
-                print(f"sending sDataList [3, {keyID}]")
+                # print(f"sending sDataList [3, {keyID}]")
                 request = service_pb2.LookupIDRequest(idNode=keyID)
                 response = stub.LookupID(request)
                 ipsearch, portsearch = response.address.split(":")
@@ -294,7 +337,6 @@ class Node:
             address = (ipres, int(portres))
             self.finger_table[entryId] = (recvId, address)
 
-        print(f"Update Finger table: {self.finger_table}")
 
 
     def update_others_finger_table(self):
@@ -322,14 +364,15 @@ class Node:
             print("KeyID:", key, "Value", value)
 
     def show_menu(self):
-        print("\n1. Join Network\n2. Leave Network\n3. Upload File\n4. Download File")
-        print("5. Print Finger Table\n6. Print my predecessor and successor")
+        print("\n1. Join Network\n2. Leave Network\n3. Upload Message\n4. Download Messages\n5. Print Finger Table\n6. Print my predecessor and successor\n6. Print my messages\n")
 
     def start_grpc_server(self):
         self.grpc_server = grpc.server(ThreadPoolExecutor(max_workers=10))
         service_pb2_grpc.add_SearchsuccServicer_to_server(SearchsuccService(self), self.grpc_server)
         service_pb2_grpc.add_JoinnodeServicer_to_server(JoinnodeService(self),  self.grpc_server)
         service_pb2_grpc.add_UpdatetableServicer_to_server(TableService(self), self.grpc_server)
+        service_pb2_grpc.add_UploadMessageServicer_to_server(MessageService(self), self.grpc_server)
+        service_pb2_grpc.add_DownloadMessageServicer_to_server(MessageDService(self), self.grpc_server)
         self.grpc_server.add_insecure_port(f'{self.ip}:{self.port + 1}')
         self.grpc_server.start()
         print(f"gRPC server running on {self.ip}:{self.port + 1}")

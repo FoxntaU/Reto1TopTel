@@ -253,3 +253,153 @@ class Updatetable(object):
             timeout,
             metadata,
             _registered_method=True)
+
+
+class UploadMessageStub(object):
+    """Servicio que expone el método UploadMessage
+    """
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.UploadMessage = channel.unary_unary(
+                '/service.UploadMessage/UploadMessage',
+                request_serializer=service__pb2.UploadMessageRequest.SerializeToString,
+                response_deserializer=service__pb2.UploadMessageResponse.FromString,
+                _registered_method=True)
+
+
+class UploadMessageServicer(object):
+    """Servicio que expone el método UploadMessage
+    """
+
+    def UploadMessage(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_UploadMessageServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'UploadMessage': grpc.unary_unary_rpc_method_handler(
+                    servicer.UploadMessage,
+                    request_deserializer=service__pb2.UploadMessageRequest.FromString,
+                    response_serializer=service__pb2.UploadMessageResponse.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'service.UploadMessage', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers('service.UploadMessage', rpc_method_handlers)
+
+
+ # This class is part of an EXPERIMENTAL API.
+class UploadMessage(object):
+    """Servicio que expone el método UploadMessage
+    """
+
+    @staticmethod
+    def UploadMessage(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/service.UploadMessage/UploadMessage',
+            service__pb2.UploadMessageRequest.SerializeToString,
+            service__pb2.UploadMessageResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+
+class DownloadMessageStub(object):
+    """Servicio que expone el método DownloadMessage
+    """
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.DownloadMessage = channel.unary_unary(
+                '/service.DownloadMessage/DownloadMessage',
+                request_serializer=service__pb2.DownloadMessageRequest.SerializeToString,
+                response_deserializer=service__pb2.DownloadMessageResponse.FromString,
+                _registered_method=True)
+
+
+class DownloadMessageServicer(object):
+    """Servicio que expone el método DownloadMessage
+    """
+
+    def DownloadMessage(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_DownloadMessageServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'DownloadMessage': grpc.unary_unary_rpc_method_handler(
+                    servicer.DownloadMessage,
+                    request_deserializer=service__pb2.DownloadMessageRequest.FromString,
+                    response_serializer=service__pb2.DownloadMessageResponse.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'service.DownloadMessage', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers('service.DownloadMessage', rpc_method_handlers)
+
+
+ # This class is part of an EXPERIMENTAL API.
+class DownloadMessage(object):
+    """Servicio que expone el método DownloadMessage
+    """
+
+    @staticmethod
+    def DownloadMessage(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/service.DownloadMessage/DownloadMessage',
+            service__pb2.DownloadMessageRequest.SerializeToString,
+            service__pb2.DownloadMessageResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)

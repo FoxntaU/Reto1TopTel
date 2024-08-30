@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rservice.proto\x12\x07service\"!\n\x0fLookupIDRequest\x12\x0e\n\x06idNode\x18\x01 \x01(\x05\"3\n\x10LookupIDResponse\x12\x0e\n\x06result\x18\x01 \x01(\x08\x12\x0f\n\x07\x61\x64\x64ress\x18\x02 \x01(\t\"\x1e\n\x0bJoinRequest\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\t\"\x1f\n\x0cJoinResponse\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\t\"\x14\n\x12UpdateTableRequest\"&\n\x13UpdateTableResponse\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\t2M\n\nSearchsucc\x12?\n\x08LookupID\x12\x18.service.LookupIDRequest\x1a\x19.service.LookupIDResponse2C\n\x08Joinnode\x12\x37\n\x08JoinNode\x12\x14.service.JoinRequest\x1a\x15.service.JoinResponse2W\n\x0bUpdatetable\x12H\n\x0bUpdateTable\x12\x1b.service.UpdateTableRequest\x1a\x1c.service.UpdateTableResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rservice.proto\x12\x07service\"!\n\x0fLookupIDRequest\x12\x0e\n\x06idNode\x18\x01 \x01(\x05\"3\n\x10LookupIDResponse\x12\x0e\n\x06result\x18\x01 \x01(\x08\x12\x0f\n\x07\x61\x64\x64ress\x18\x02 \x01(\t\"\x1e\n\x0bJoinRequest\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\t\"\x1f\n\x0cJoinResponse\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\t\"\x14\n\x12UpdateTableRequest\"&\n\x13UpdateTableResponse\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\t\"=\n\x14UploadMessageRequest\x12\x14\n\x0cmessage_name\x18\x01 \x01(\t\x12\x0f\n\x07message\x18\x02 \x01(\t\"&\n\x15UploadMessageResponse\x12\r\n\x05saved\x18\x01 \x01(\x08\".\n\x16\x44ownloadMessageRequest\x12\x14\n\x0cmessage_name\x18\x01 \x01(\t\"*\n\x17\x44ownloadMessageResponse\x12\x0f\n\x07message\x18\x01 \x01(\t2M\n\nSearchsucc\x12?\n\x08LookupID\x12\x18.service.LookupIDRequest\x1a\x19.service.LookupIDResponse2C\n\x08Joinnode\x12\x37\n\x08JoinNode\x12\x14.service.JoinRequest\x1a\x15.service.JoinResponse2W\n\x0bUpdatetable\x12H\n\x0bUpdateTable\x12\x1b.service.UpdateTableRequest\x1a\x1c.service.UpdateTableResponse2_\n\rUploadMessage\x12N\n\rUploadMessage\x12\x1d.service.UploadMessageRequest\x1a\x1e.service.UploadMessageResponse2g\n\x0f\x44ownloadMessage\x12T\n\x0f\x44ownloadMessage\x12\x1f.service.DownloadMessageRequest\x1a .service.DownloadMessageResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -33,10 +33,22 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_UPDATETABLEREQUEST']._serialized_end=199
   _globals['_UPDATETABLERESPONSE']._serialized_start=201
   _globals['_UPDATETABLERESPONSE']._serialized_end=239
-  _globals['_SEARCHSUCC']._serialized_start=241
-  _globals['_SEARCHSUCC']._serialized_end=318
-  _globals['_JOINNODE']._serialized_start=320
-  _globals['_JOINNODE']._serialized_end=387
-  _globals['_UPDATETABLE']._serialized_start=389
-  _globals['_UPDATETABLE']._serialized_end=476
+  _globals['_UPLOADMESSAGEREQUEST']._serialized_start=241
+  _globals['_UPLOADMESSAGEREQUEST']._serialized_end=302
+  _globals['_UPLOADMESSAGERESPONSE']._serialized_start=304
+  _globals['_UPLOADMESSAGERESPONSE']._serialized_end=342
+  _globals['_DOWNLOADMESSAGEREQUEST']._serialized_start=344
+  _globals['_DOWNLOADMESSAGEREQUEST']._serialized_end=390
+  _globals['_DOWNLOADMESSAGERESPONSE']._serialized_start=392
+  _globals['_DOWNLOADMESSAGERESPONSE']._serialized_end=434
+  _globals['_SEARCHSUCC']._serialized_start=436
+  _globals['_SEARCHSUCC']._serialized_end=513
+  _globals['_JOINNODE']._serialized_start=515
+  _globals['_JOINNODE']._serialized_end=582
+  _globals['_UPDATETABLE']._serialized_start=584
+  _globals['_UPDATETABLE']._serialized_end=671
+  _globals['_UPLOADMESSAGE']._serialized_start=673
+  _globals['_UPLOADMESSAGE']._serialized_end=768
+  _globals['_DOWNLOADMESSAGE']._serialized_start=770
+  _globals['_DOWNLOADMESSAGE']._serialized_end=873
 # @@protoc_insertion_point(module_scope)

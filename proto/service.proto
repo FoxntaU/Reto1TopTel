@@ -47,3 +47,34 @@ message UpdateTableResponse {
 service Updatetable {
   rpc UpdateTable (UpdateTableRequest) returns (UpdateTableResponse);
 }
+
+// Mensaje para la solicitud de updateTable
+message UploadMessageRequest {
+  string message_name = 1;
+  string message = 2;
+}
+
+// Mensaje para la respuesta de UploadMessage
+message UploadMessageResponse {
+  bool saved = 1;  // saved
+}
+
+// Servicio que expone el método UploadMessage
+service UploadMessage {
+  rpc UploadMessage (UploadMessageRequest) returns (UploadMessageResponse);
+}
+
+// Mensaje para la solicitud de updateTable
+message DownloadMessageRequest {
+  string message_name = 1;  
+}
+
+// Mensaje para la respuesta de DownloadMessage
+message DownloadMessageResponse {
+  string message = 1;
+}
+
+// Servicio que expone el método DownloadMessage
+service DownloadMessage {
+  rpc DownloadMessage (DownloadMessageRequest) returns (DownloadMessageResponse);
+}
