@@ -390,7 +390,7 @@ class Node:
             print("KeyID:", key, "Value", value)
 
     def show_menu(self):
-        print("\n1. Join Network\n2. Leave Network\n3. Upload Message\n4. Download Messages\n5. Print Finger Table\n6. Print my predecessor and successor\n6. Print my messages\n")
+        print("\n1. Join Network\n2. Leave Network\n3. Upload Message\n4. Download Messages\n5. Print Finger Table\n6. Print my predecessor and successor\n7. Print my messages\n")
 
     def start_grpc_server(self):
         self.grpc_server = grpc.server(ThreadPoolExecutor(max_workers=10))

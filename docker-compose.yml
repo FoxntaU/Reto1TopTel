@@ -1,40 +1,46 @@
-#version: '3.9'
+version: '3.9'
 services:
   nodo1:
-    build: .
+    image: nodos
     container_name: nodo1
     ports:
       - "2000:2000"
       - "2001:2001"
-    command: ["python", "NodeServer.py"]
+    command: ["python", "NodeServer.py", "172.20.0.2", "2000"]
     networks:
-      - chord_network
+      chord_network:
+        ipv4_address: 172.20.0.2
 
   nodo2:
-    build: .
+    image: nodos
     container_name: nodo2
     ports:
       - "3000:3000"
       - "3001:3001"
-    command: ["python", "NodeServer.py", "nodo2", "3000", "nodo1", "2000"]
+    command: ["python", "NodeServer.py", "172.20.0.3", "3000", "172.20.0.2", "2000"]
     depends_on:
       - nodo1
     networks:
-      - chord_network
+      chord_network:
+        ipv4_address: 172.20.0.3
 
   nodo3:
-    build: .
+    image: nodos
     container_name: nodo3
     ports:
       - "4000:4000"
       - "4001:4001"
-    command: ["python", "NodeServer.py", "nodo3", "4000", "nodo1", "2000"]
+    command: ["python", "NodeServer.py", "172.20.0.4", "4000", "172.20.0.2", "2000"]
     depends_on:
       - nodo1
       - nodo2
     networks:
-      - chord_network
+      chord_network:
+        ipv4_address: 172.20.0.4
 
 networks:
   chord_network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
