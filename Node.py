@@ -258,6 +258,21 @@ class Node:
         else:
             print("Invalid choice")
 
+    def leave_network(self):
+        print("Leaving network")
+        self.http_client.send_request('/connect', self.succ[0], self.succ[1], json.dumps({"ip": self.pred[0], "port": self.pred[1], "connectionType": 4}))
+        self.http_client.send_request('/connect', self.pred[0], self.pred[1], json.dumps({"ip": self.succ[0], "port": self.succ[1], "connectionType": 4}))
+        self.grpc_server.stop(0)
+
+        self.update_others_finger_table()
+
+        self.pred = (self.ip, self.port)    
+        self.predID = self.id
+        self.succ = (self.ip, self.port)
+        self.succID = self.id
+        self.finger_table.clear()
+        print(self.address, "Left network")
+
     def upload_message(self, ip, port, message_name, message):
         print("Uploading message")
         with grpc.insecure_channel(f'{ip}:{int(port) + 1}') as channel:
