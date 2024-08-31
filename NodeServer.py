@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import threading
 from http.server import HTTPServer
 import json
@@ -12,6 +13,9 @@ import service_pb2 # pip install protobuf
 import time
 from http.server import ThreadingHTTPServer
 from http.server import BaseHTTPRequestHandler, HTTPServer
+
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # REST API
 
@@ -59,11 +63,11 @@ class HTTPClient:
             headers = {'Content-type': 'application/json'}
             connection.request('POST', path, body=data, headers=headers)
             response = connection.getresponse()
-            print(f"Response status: {response.status}, reason: {response.reason}")
+            logging.info(f"Response status: {response.status}, reason: {response.reason}")
             response_data = response.read()
-            print("Response data:", response_data.decode())
+            logging.info(f"Response data: {response_data.decode()}")
         except Exception as e:
-            print(f"An error occurred: {e}")
+            logging.error(f"An error occurred send join request: {e}")
         finally:
             if connection:
                 connection.close()
@@ -130,8 +134,7 @@ class JoinnodeService(service_pb2_grpc.JoinnodeServicer):
 
     def JoinNode(self, request, context):
         ip, port = request.address.split(":")
-        print("Connection with:", ip, ":", port)
-        print("JoinNode request received")
+        logging.info(f"JoinNode request received: {ip}:{port}")
         keyID = getHash(ip + ":" + port)
         Oldpred = self.node.pred
         self.node.pred = (ip, port)
@@ -140,9 +143,9 @@ class JoinnodeService(service_pb2_grpc.JoinnodeServicer):
 
         def post_response_operations():
             time.sleep(2)
-            print("Updating F Table in Join Node")
+            logging.info("JoinNode post response operations")
             self.node.update_finger_table()
-            print("Updating other F Tables in Join Node")
+            logging.info("Updating other F Tables in Join Node")
             self.node.update_others_finger_table()
 
         threading.Thread(target=post_response_operations).start()
@@ -155,7 +158,7 @@ class TableService(service_pb2_grpc.UpdatetableServicer):
         self.node = node
 
     def UpdateTable(self, request, context):
-        print("Sending my succ to update finger table")
+        logging.info("UpdateTable request received")
         self.node.update_finger_table()
         # Retornar el sucesor como parte de la respuesta
         return service_pb2.UpdateTableResponse(address=str(self.node.succ[0]) + ":" + str(self.node.succ[1]))
@@ -165,11 +168,11 @@ class MessageService(service_pb2_grpc.UploadMessageServicer):
         self.node = node
 
     def UploadMessage(self, request, context):
-        print("Upload message request received")
+        logging.info("Upload message request received")
         message = request.message
         message_name = request.message_name
         self.node.messages[message_name] = message
-        print(f"Message uploaded: {message_name}")
+        logging.info(f"Message uploaded: {message_name}")
         return service_pb2.UploadMessageResponse(saved=True)
     
 class MessageDService(service_pb2_grpc.DownloadMessageServicer):
@@ -177,14 +180,14 @@ class MessageDService(service_pb2_grpc.DownloadMessageServicer):
         self.node = node
 
     def DownloadMessage(self, request, context):
-        print("Download message request received")
+        logging.info("Download message request received")
         message_name = request.message_name
         message = self.node.messages[message_name] if message_name in self.node.messages else None
         if message:
-            print(f"Message found: {message_name}")
+            logging.info(f"Message found: {message_name}")
             return service_pb2.DownloadMessageResponse(message=message)
         else:
-            print(f"Message not found: {message_name}")
+            logging.info(f"Message not found: {message_name}")
             return service_pb2.DownloadMessageResponse(message="Not found")
 
 # Node class to handle all the functionalities of a node in the Chord network
@@ -218,7 +221,7 @@ class Node:
         return self.id
 
     def listen(self):
-        print(f"Server is listening on {self.ip}:{self.port}")
+        logging.info("Server is listening on %s:%s", self.ip, self.port)
         server = ThreadingHTTPServer((self.ip, self.port), lambda *args, **kwargs: RequestHandler(self, *args, **kwargs))
         server.serve_forever()
 
@@ -261,38 +264,38 @@ class Node:
     """
 
     def upload_message(self, ip, port, message_name, message):
-        print("Uploading message")
+        logging.info("Uploading message")
         with grpc.insecure_channel(f'{ip}:{int(port) + 1}') as channel:
             stub = service_pb2_grpc.UploadMessageStub(channel)
             request = service_pb2.UploadMessageRequest(message=message, message_name=message_name)
             response = stub.UploadMessage(request)
-            print("Upload status: " + str(response.saved))
+            logging.info("Upload status: %s", response.saved)
 
     def download_message(self, ip, port, message_name):
-        print("Downloading message")
+        logging.info("Downloading message")
         with grpc.insecure_channel(f'{ip}:{int(port) + 1}') as channel:
             stub = service_pb2_grpc.DownloadMessageStub(channel)
             request = service_pb2.DownloadMessageRequest(message_name=message_name)
             response = stub.DownloadMessage(request)
-            print("Message:", response.message)
+            logging.info("Message:", response.message)
 
     def send_join_request(self, ip, port): 
         succ = self.getSuccessor(ip, port, self.id)
         succ_ip, succ_port = succ.split(":")
-        print(f"Successor found: {succ}")
+        logging.info(f"Successor found: {succ}")
         with grpc.insecure_channel(f'{succ_ip}:{int(succ_port) + 1}') as channel:
             stub = service_pb2_grpc.JoinnodeStub(channel)
             request = service_pb2.JoinRequest(address=f"{self.ip}:{self.port}")
             response = stub.JoinNode(request)
         
-        print(f"My new predecessor: {response.address}")
+        logging.info(f"My new predecessor: {response.address}")
         # Actualiza el predecesor y sucesor de acuerdo a la respuesta
         pred_ip, pred_port = response.address.split(":")
         self.update_predecessor(pred_ip, int(pred_port))
         self.update_successor(succ_ip, int(succ_port))
     
         # Actualiza el sucesor del predecesor
-        print("Updating predecessor's successor")
+        logging.info("Updating predecessor's successor")
         self.http_client.send_request('/connect', self.pred[0], self.pred[1], json.dumps({"ip": self.ip, "port": self.port, "connectionType": 4}))
 
     # Get the successor of the node # (CLIENT SIDE)
@@ -324,7 +327,7 @@ class Node:
         print(f"Successor    N.ID: {self.succID} / {self.succ[0]}:{self.succ[1]}")
     
     def update_finger_table(self):
-        print("Updating F Table")
+        logging.info("Updating finger table")
         for i in range(MAX_BITS):
             entryId = (self.id + (2 ** i)) % MAX_NODES
             # If only one node in network
@@ -340,7 +343,7 @@ class Node:
             self.finger_table[entryId] = (recvId, address)
 
     def update_others_finger_table(self):
-        print("Updating other F Tables")
+        logging.info("Updating other F Tables")
         here = self.succ  
         while True:
             if here == self.address:
@@ -355,7 +358,7 @@ class Node:
                     if here == self.succ:
                         break
             except Exception as e:
-                print(f"An error occurred: {e}")
+                logging.error(f"An error occurred update other table: {e}")
                 break
 
     def print_finger_table(self):
@@ -364,7 +367,7 @@ class Node:
             print("KeyID:", key, "Value", value)
 
     def show_menu(self):
-        print("\n1. Join Network\n2. Leave Network\n3. Upload Message\n4. Download Messages\n5. Print Finger Table\n6. Print my predecessor and successor\n6. Print my messages\n")
+        print("\n1. Join Network\n2. Leave Network\n3. Upload Message\n4. Download Messages\n5. Print Finger Table\n6. Print my predecessor and successor\n7. Print my messages\n")
 
     def start_grpc_server(self):
         self.grpc_server = grpc.server(ThreadPoolExecutor(max_workers=10))
@@ -375,7 +378,7 @@ class Node:
         service_pb2_grpc.add_DownloadMessageServicer_to_server(MessageDService(self), self.grpc_server)
         self.grpc_server.add_insecure_port(f'{self.ip}:{self.port + 1}')
         self.grpc_server.start()
-        print(f"gRPC server running on {self.ip}:{self.port + 1}")
+        logging.info(f"gRPC server running on {self.ip}:{self.port + 1}")
         self.grpc_server.wait_for_termination()
 
     def start(self):
@@ -388,27 +391,32 @@ class Node:
 
 if __name__ == "__main__":
 
-    time.sleep(2)
-    if len(sys.argv) < 5:
-        print("Arguments not supplied (Defaults used)")
-    else:
-        IP = sys.argv[1]
-        PORT = int(sys.argv[2])
+    if len(sys.argv) < 3:
+        logging.error("Usage: python NodeServer.py <IP> <PORT> [<IP_CONNECT> <PORT_CONNECT>]")
+        sys.exit(1)
+
+    IP = sys.argv[1]
+    PORT = int(sys.argv[2])
+
+    if len(sys.argv) >= 5:
         IP_CONNECT = sys.argv[3]
         PORT_CONNECT = int(sys.argv[4])
+    else:
+        IP_CONNECT = None
+        PORT_CONNECT = None
 
     node = Node(IP, PORT)
-    print("Node ID:", node.get_id())
+    logging.info("Node ID: %s", node.get_id())
 
-    if len(sys.argv) < 5:
-        node.start()
-    else:
-        node.start()
-        node.send_join_request(IP_CONNECT, int(PORT_CONNECT))
+    node.start()
+
+    if IP_CONNECT and PORT_CONNECT:
+            time.sleep(2)
+            node.send_join_request(IP_CONNECT, PORT_CONNECT)
 
 
     try:
         while True:
             pass
     except KeyboardInterrupt:
-        print("Server is shutting down.")
+        logging.info("Stopping server")

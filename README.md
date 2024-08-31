@@ -7,13 +7,11 @@ docker-compose up --build
 
 docker network create mi_red
 
-docker run -d --name nodo1 --network mi_red -p 2000:2000 -p 2001:2001 nodos python NodeServer.py
-docker run -d --name nodo2 --network mi_red -p 3000:3000 -p 3001:3001 nodos python NodeServer.py nodo2 3000 nodo1 2001
-docker run -d --name nodo3 --network mi_red -p 4000:4000 -p 4001:4001 nodos python NodeServer.py nodo3 4000 nodo1 2001
+conectarme a la red con un nuevo nodo
+docker run -it --rm --network solucion_chord_network --ip 172.20.0.5 nodos python Node.py 172.20.0.5 5000
 
-docker inspect -f '{{ .NetworkSettings.Networks.mi_red.IPAddress }}' nodo1
-
-
+conectarme a un nodo 
+docker exec -it <container_id_or_name> /bin/bash
 
 ## Tópicos Espec. en Telemática - C2466-ST0263-1716
 
