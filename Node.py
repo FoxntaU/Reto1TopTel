@@ -271,6 +271,8 @@ class Node:
         self.succ = (self.ip, self.port)
         self.succID = self.id
         self.finger_table.clear()
+        
+
         print(self.address, "Left network")
 
     def upload_message(self, ip, port, message_name, message):
