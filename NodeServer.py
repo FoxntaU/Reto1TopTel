@@ -158,7 +158,6 @@ class TableService(service_pb2_grpc.UpdatetableServicer):
         self.node = node
 
     def UpdateTable(self, request, context):
-        logging.info("UpdateTable request received")
         self.node.update_finger_table()
         # Retornar el sucesor como parte de la respuesta
         return service_pb2.UpdateTableResponse(address=str(self.node.succ[0]) + ":" + str(self.node.succ[1]))
@@ -226,9 +225,18 @@ class Node:
         server.serve_forever()
 
     def connection_thread(self, ip, port, connectionType, dataforprocces):
-        if connectionType == 4:
+        if connectionType == 1:
+            self.update_predecessor(ip, int(port))
+        elif connectionType == 2:
             self.update_successor(ip, int(port))
-
+        elif connectionType == 3:
+            for key, value in dataforprocces.items():
+                message_id = getHash(key)
+                addres = self.getSuccessor(self.address[0], self.address[1], message_id)
+                ip, port = addres.split(":")
+                self.upload_message(ip, int(port), key, value)
+        print(f"Actualización realizada correctamente para el connectionType {connectionType}")
+      
     """
     def asAClientThread(self):
         self.show_menu()
@@ -263,6 +271,28 @@ class Node:
             print("Invalid choice")
     """
 
+    def leave_network(self):
+        print("Leaving network")
+        print(f"Informando al sucesor ({self.succ[0]}:{self.succ[1]}) para que actualice su predecesor a {self.pred[0]}:{self.pred[1]}")
+        self.http_client.send_request('/connect',self.succ[0], self.succ[1], json.dumps({"ip": self.pred[0], "port": self.pred[1], "connectionType": 1}))
+        print(f"Informando al predecesor ({self.pred[0]}:{self.pred[1]}) para que actualice su sucesor a {self.succ[0]}:{self.succ[1]}")
+        self.http_client.send_request('/connect',self.pred[0], self.pred[1], json.dumps({"ip": self.succ[0], "port": self.succ[1], "connectionType": 2}))
+        self.update_others_finger_table()
+
+        print('enviando los arvhivos a la red para que los almacenen')
+        if len(self.messages) > 0:
+            self.http_client.send_request('/connect',self.pred[0], self.pred[1], json.dumps({"ip": self.succ[0], "port": self.succ[1], "connectionType": 3, "data": self.messages}))
+            self.messages.clear()
+
+        # Limpiar las referencias del nodo que sale
+        self.succ = (self.ip, self.port)
+        self.succID = self.id
+        self.pred = (self.ip, self.port)
+        self.predID = self.id
+        self.finger_table.clear()
+        print(self.address, "Left network")
+
+
     def upload_message(self, ip, port, message_name, message):
         logging.info("Uploading message")
         with grpc.insecure_channel(f'{ip}:{int(port) + 1}') as channel:
@@ -296,7 +326,7 @@ class Node:
     
         # Actualiza el sucesor del predecesor
         logging.info("Updating predecessor's successor")
-        self.http_client.send_request('/connect', self.pred[0], self.pred[1], json.dumps({"ip": self.ip, "port": self.port, "connectionType": 4}))
+        self.http_client.send_request('/connect', self.pred[0], self.pred[1], json.dumps({"ip": self.ip, "port": self.port, "connectionType": 2}))
 
     # Get the successor of the node # (CLIENT SIDE)
     def getSuccessor(self, ip, port, keyID):
