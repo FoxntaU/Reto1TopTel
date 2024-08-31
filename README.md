@@ -1,17 +1,21 @@
 # Reto1TopTel
 python -m grpc_tools.protoc -I=proto --python_out=. --grpc_python_out=. proto/service.proto
 
+sudo update 
+sudo ajkdlsfj;
+install docker 
+
 docker build -t nodos . 
+
+docker image ls 
 
 docker-compose up --build
 
-docker network create mi_red
-
 conectarme a la red con un nuevo nodo
 docker run -it --rm --network solucion_chord_network --ip 172.20.0.5 nodos python Node.py 172.20.0.5 5000
+docker run -it --rm --network reto1toptel_chord_network --ip 172.20.0.5 nodos python Node.py 172.20.0.5 5000
 
-conectarme a un nodo 
-docker exec -it <container_id_or_name> /bin/bash
+### how to run it
 
 ## Tópicos Espec. en Telemática - C2466-ST0263-1716
 
