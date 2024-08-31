@@ -225,6 +225,10 @@ class Node:
     def connection_thread(self, ip, port, connectionType, dataforprocces):
         if connectionType == 4:
             self.update_successor(ip, int(port))
+        elif connectionType == 5:
+            self.update_predecessor(ip, int(port))
+            
+        print(f"Actualización realizada correctamente para el connectionType {connectionType}")
         
     def asAClientThread(self):
         self.show_menu()
@@ -260,23 +264,28 @@ class Node:
 
     def leave_network(self):
         print("Leaving network")
-        self.http_client.send_request('/connect', self.succ[0], self.succ[1], json.dumps({"ip": self.pred[0], "port": self.pred[1], "connectionType": 4}))
-        self.http_client.send_request('/connect', self.pred[0], self.pred[1], json.dumps({"ip": self.succ[0], "port": self.succ[1], "connectionType": 4}))
-        self.grpc_server.stop(0)
+
+        print(f"Informando al sucesor ({self.succ[0]}:{self.succ[1]}) para que actualice su predecesor a {self.pred[0]}:{self.pred[1]}")
+        self.http_client.send_request('/connect',self.succ[0], self.succ[1], json.dumps({"ip": self.pred[0], "port": self.pred[1], "connectionType": 5}))
+        print(f"Informando al predecesor ({self.pred[0]}:{self.pred[1]}) para que actualice su sucesor a {self.succ[0]}:{self.succ[1]}")
+        self.http_client.send_request('/connect',self.pred[0], self.pred[1], json.dumps({"ip": self.succ[0], "port": self.succ[1], "connectionType": 4}))
+
+        #time.sleep(1)
 
         self.update_others_finger_table()
 
-        self.pred = (self.ip, self.port)    
-        self.predID = self.id
+        # Limpiar las referencias del nodo que sale
         self.succ = (self.ip, self.port)
         self.succID = self.id
+        self.pred = (self.ip, self.port)
+        self.predID = self.id
         self.finger_table.clear()
-        
 
+        self.grpc_server.stop(0)
         print(self.address, "Left network")
 
     def upload_message(self, ip, port, message_name, message):
-        print("Uploading message")
+        #print("Uploading message")
         with grpc.insecure_channel(f'{ip}:{int(port) + 1}') as channel:
             stub = service_pb2_grpc.UploadMessageStub(channel)
             request = service_pb2.UploadMessageRequest(message=message, message_name=message_name)
@@ -284,7 +293,7 @@ class Node:
             print("Upload status: " + str(response.saved))
 
     def download_message(self, ip, port, message_name):
-        print("Downloading message")
+        #print("Downloading message")
         with grpc.insecure_channel(f'{ip}:{int(port) + 1}') as channel:
             stub = service_pb2_grpc.DownloadMessageStub(channel)
             request = service_pb2.DownloadMessageRequest(message_name=message_name)
@@ -307,7 +316,7 @@ class Node:
         self.update_successor(succ_ip, int(succ_port))
     
         # Actualiza el sucesor del predecesor
-        print("Updating predecessor's successor")
+        #print("Updating predecessor's successor")
         self.http_client.send_request('/connect', self.pred[0], self.pred[1], json.dumps({"ip": self.ip, "port": self.port, "connectionType": 4}))
 
     # Get the successor of the node # (CLIENT SIDE)
@@ -339,7 +348,7 @@ class Node:
         print(f"Successor    N.ID: {self.succID} / {self.succ[0]}:{self.succ[1]}")
     
     def update_finger_table(self):
-        print("Updating F Table")
+        #print("Updating F Table")
         for i in range(MAX_BITS):
             entryId = (self.id + (2 ** i)) % MAX_NODES
             # If only one node in network
@@ -357,7 +366,7 @@ class Node:
 
 
     def update_others_finger_table(self):
-        print("Updating other F Tables")
+        #print("Updating other F Tables")
         here = self.succ  
         while True:
             if here == self.address:
@@ -376,7 +385,7 @@ class Node:
                 break
 
     def print_finger_table(self):
-        print("Printing F Table")
+        #  print("Printing F Table")
         for key, value in self.finger_table.items(): 
             print("KeyID:", key, "Value", value)
 
