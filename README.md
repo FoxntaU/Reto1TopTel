@@ -1,6 +1,19 @@
 # Reto1TopTel
 python -m grpc_tools.protoc -I=proto --python_out=. --grpc_python_out=. proto/service.proto
 
+docker build -t nodos . 
+
+docker-compose up --build
+
+docker network create mi_red
+
+docker run -d --name nodo1 --network mi_red -p 2000:2000 -p 2001:2001 nodos python NodeServer.py
+docker run -d --name nodo2 --network mi_red -p 3000:3000 -p 3001:3001 nodos python NodeServer.py nodo2 3000 nodo1 2001
+docker run -d --name nodo3 --network mi_red -p 4000:4000 -p 4001:4001 nodos python NodeServer.py nodo3 4000 nodo1 2001
+
+docker inspect -f '{{ .NetworkSettings.Networks.mi_red.IPAddress }}' nodo1
+
+
 
 ## Tópicos Espec. en Telemática - C2466-ST0263-1716
 

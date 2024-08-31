@@ -1,0 +1,40 @@
+version: '3.9'
+services:
+  nodo1:
+    image: nodos
+    container_name: nodo1
+    ports:
+      - "2000:2000"  # Puerto para la aplicación
+      - "2001:2001"  # Puerto GRPC
+    command: ["python", "NodeServer.py"]
+    networks:
+      - chord_network
+
+  nodo2:
+    image: nodos
+    container_name: nodo2
+    ports:
+      - "3000:3000"  # Puerto para la aplicación
+      - "3001:3001"  # Puerto GRPC
+    command: ["python", "NodeServer.py", "nodo2", "3000", "nodo1", "2000"]
+    depends_on:
+      - nodo1
+    networks:
+      - chord_network
+
+  nodo3:
+    image: nodos
+    container_name: nodo3
+    ports:
+      - "4000:4000"  # Puerto para la aplicación
+      - "4001:4001"  # Puerto GRPC
+    command: ["python", "NodeServer.py", "nodo3", "4000", "nodo1", "2000"]
+    depends_on:
+      - nodo1
+      - nodo2
+    networks:
+      - chord_network
+
+networks:
+  chord_network:
+    driver: bridge
