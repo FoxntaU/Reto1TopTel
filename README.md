@@ -11,6 +11,8 @@ docker image ls
 
 docker-compose up --build
 
+
+
 conectarme a la red con un nuevo nodo
 docker run -it --rm --network solucion_chord_network --ip 172.20.0.5 nodos python Node.py 172.20.0.5 5000
 docker run -it --rm --network reto1toptel_chord_network --ip 172.20.0.5 nodos python Node.py 172.20.0.5 5000
