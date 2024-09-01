@@ -2,6 +2,8 @@
 
 ## Tópicos Espec. en Telemática - C2466-ST0263-1716
 
+*Presentación y video en el Releases del repositorio*
+
 ### Estudiantes: 
 - Nicolas Tovar Almanza - ntovara@eafit.edu.co
 - Samuel Acosta Aristizábal - sacostaa1@eafit.edu.co
