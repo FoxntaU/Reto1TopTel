@@ -247,7 +247,9 @@ class Node:
             message_name = input("Enter message name: ")
             message = input("Enter message: ")
             message_id = getHash(message_name)
+            print(f"Message ID: {message_id}")
             addres = self.getSuccessor(self.address[0], self.address[1], message_id)
+            print(f"Successor found: {addres}")
             ip, port = addres.split(":")
             self.upload_message(ip, int(port), message_name, message)
         elif choice == 4:

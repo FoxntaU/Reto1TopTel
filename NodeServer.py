@@ -168,10 +168,11 @@ class MessageService(service_pb2_grpc.UploadMessageServicer):
 
     def UploadMessage(self, request, context):
         logging.info("Upload message request received")
+        logging.info(f"Message name: {request.message_name}")
+        logging.info(f"Message: {request.message}")
         message = request.message
         message_name = request.message_name
         self.node.messages[message_name] = message
-        logging.info(f"Message uploaded: {message_name}")
         return service_pb2.UploadMessageResponse(saved=True)
     
 class MessageDService(service_pb2_grpc.DownloadMessageServicer):
