@@ -53,15 +53,16 @@ El diseño del sistema se basa en principios modernos de arquitectura distribuid
 
 #### Arquitectura P2P:
   Cada nodo en la red puede actuar tanto como cliente como servidor. Esta arquitectura elimina la necesidad de un servidor central, lo que aumenta la robustez y la escalabilidad del sistema. Se implementan funciones para gestionar la conexión de nuevos nodos a la red y la ubicación de los recursos distribuidos (archivos/mensajes) dentro de la red P2P. Además la comunicación entre los nodos se realiza utilizando gRPC lo que permite llamadas a métodos remotos con bajo tiempo de latencia y soporte para concurrencia. Se utilizó también API REST para algunas funciones adicionales, lo que añade flexibilidad al sistema. A su vez, la implementación se ha desplegado en una instancia EC2 de AWS, lo que permite la escalabilidad y accesibilidad. El uso de Docker facilita la portabilidad y la gestión del entorno de ejecución
+  
+![p2p (3)](https://github.com/user-attachments/assets/667a81e0-af2e-487c-a150-397f4728f99e)
 
-  ![p2p (1)](https://github.com/user-attachments/assets/8f140491-ce51-42d5-9180-746fc8235741)
 
 #### Patrones de Diseño y Mejores Prácticas:
 - **Patrón de Microservicios:** Cada nodo contiene uno o más microservicios que se encargan de funciones específica,además se pueden escalar de manera independiente según la carga de trabajo, lo que es ideal para AWS
 - **Patrón de Proveedor/Consumidor:** se observa en la manera en que los nodos solicitan y proporcionan recursos (mensajes/archivos) entre sí. Esto asegura una distribución eficiente de los recursos en la red
 - **Patrón de Singleton:** En la creación y manejo de conexiones gRPC, asegurando que solo haya una instancia de la conexión por nodo, lo cual es eficiente en términos de recursos.
 - **Uso de gRPC:**  Es un framework altamente eficiente para la comunicación entre servicios, utilizando HTTP/2 para permitir multiplexación, compresión y cancelación de múltiples llamadas. Esto es especialmente importante en una red P2P distribuida, con lo que hicimos una implementación clara de la API, utilizando el archivo .proto para definir los servicios y mensajes para asegurarnos de tener una interfaz bien definida entre nodos.
-- **Uso de Docker:** Al utilizar docker no aseguramos de que el codigo funcione de manera consistente en diferentes entornos, sumandole la combinación de Docker con una instancia EC2 de AWS permite un despliegue rápido y escalable, con la capacidad de manejar múltiples instancias según la demanda
+- **Uso de Docker:** Al utilizar docker nos aseguramos de que el codigo funcione de manera consistente en diferentes entornos, sumandole la combinación de Docker con una instancia EC2 de AWS permite un despliegue rápido y escalable, con la capacidad de manejar múltiples instancias según la demanda
 
 ## 3. Descripción del ambiente de desarrollo y técnico: 
 
@@ -80,7 +81,11 @@ El proyecto está desarrollado en **Python**, un lenguaje de programación inter
 **Estructura del Código:**
 - Node.py: Contiene la lógica principal para un nodo en la red P2P, incluyendo las funcionalidades de carga y descarga de mensajes.
 - Dockerfile: Define cómo se construye la imagen Docker para contenerizar el proyecto.
+- docker-compose.yml: Permite configurar y documentar todas las dependencias de servicio de la aplicación
+- NodeServer.py: Implementa el servidor gRPC que maneja las solicitudes remotas
+- .dockerignore:  Para excluir archivos y directorios del contexto de construcción
 - service_pb2.py / service_pb2_grpc.py: Archivos generados automáticamente por protobuf que contienen las definiciones y stub para gRPC.
+- requirements.txt: Especificar las librerías y sus versiones necesarias para que el programa funcione correctamente
 
 ### Ambiente de Desarrollo:
 
