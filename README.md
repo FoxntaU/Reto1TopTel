@@ -54,7 +54,8 @@ El diseño del sistema se basa en principios modernos de arquitectura distribuid
 #### Arquitectura P2P:
   Cada nodo en la red puede actuar tanto como cliente como servidor. Esta arquitectura elimina la necesidad de un servidor central, lo que aumenta la robustez y la escalabilidad del sistema. Se implementan funciones para gestionar la conexión de nuevos nodos a la red y la ubicación de los recursos distribuidos (archivos/mensajes) dentro de la red P2P. Además la comunicación entre los nodos se realiza utilizando gRPC lo que permite llamadas a métodos remotos con bajo tiempo de latencia y soporte para concurrencia. Se utilizó también API REST para algunas funciones adicionales, lo que añade flexibilidad al sistema. A su vez, la implementación se ha desplegado en una instancia EC2 de AWS, lo que permite la escalabilidad y accesibilidad. El uso de Docker facilita la portabilidad y la gestión del entorno de ejecución
   
-![p2p (3)](https://github.com/user-attachments/assets/667a81e0-af2e-487c-a150-397f4728f99e)
+![p2p (4)](https://github.com/user-attachments/assets/bb181177-03d9-43fc-a4fc-c4d3168931ab)
+
 
 
 #### Patrones de Diseño y Mejores Prácticas:
