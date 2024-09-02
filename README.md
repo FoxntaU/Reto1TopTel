@@ -202,31 +202,23 @@ La red Docker (chord_network) maneja la interconexión de los nodos.
 ### Cómo se lanza el servidor:
 
 #### 1. Acceso a la Instancia EC2:
-Usa el archivo PEM (Parchord.pem) para conectarte a la instancia EC2
 
-```bash
-ssh -i "Parchord.pem" ubuntu@54.167.62.196
-```
+Accedemos y nos conectamos a la instancia por medio de SSH con el archivo .pem
 
 #### 2. Construcción y Ejecución del Proyecto:
-
-```bash
-#Una vez conectado a la instancia EC2, navega al directorio del proyecto:
-ssh -i "Parchord.pem" ubuntu@54.167.62.196
-```
 
 ```bash
 #Construye la imagen Docker
 sudo docker build -t nodos .
 ```
 
+#### 3. Ejecución de Nodos:
 ```bash
 #Inicia el proyecto usando Docker Compose
 docker-compose up --build
 ```
 
-#### 3. Ejecución de Nodos:
-
+#### 4. Ejecución Conexion del Nodo cliente
 ```bash
 sudo docker run -it --rm --network reto1toptel_chord_network --ip 172.20.0.5 nodos python Node.py 172.20.0.5 5000
 ```
