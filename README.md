@@ -189,11 +189,12 @@ Los nodos nodo2 y nodo3 dependen de nodo1, lo que significa que Docker Compose n
 **Instancia EC2 de AWS:**
 
 - **IP Pública:** 54.167.62.196
-- **Nombre de la Instancia:** PruebaChord
+- **Nombre de la Instancia:** Chord
 - **Región de AWS:** us-east-1 (Norte de Virginia)
 - **Tipo de Instancia:** t2.micro
 
-  ![image](https://github.com/user-attachments/assets/3fa46c06-aa6b-470e-81ac-e43ecd982182)
+  ![image](https://github.com/user-attachments/assets/41bf02d2-069c-4bb2-ae05-2b804b90c8f0)
+
 
 
 ### Configuración de IP y Puertos:
