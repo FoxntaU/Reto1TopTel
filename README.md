@@ -18,7 +18,13 @@ Tópicos Especiales en Telemática, 2024-2 Reto No 1
 
 Arquitectura P2P y Comunicación entre procesos mediante API REST, RPC y MOM
 
+### Presentación
+[Presentacion en CANVA](https://www.canva.com/design/DAGPkOx6egk/fefitXrLr_wFTTLqH3dnEA/edit?utm_content=DAGPkOx6egk&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
 
+### Video
+[Video en Youtube](https://www.youtube.com/)
+
+### Documentación
 ## 1. Breve descripción de la actividad
 
 La actividad consiste en diseñar e implementar un sistema P2P donde cada nodo contiene uno o más microservicios que soportan un sistema de compartición de archivos (mensajes) distribuido y descentralizado. El reto se centra en crear una red P2P estructurada basada en Chord/DHT o en explorar una alternativa no estructurada, como una red superpeer o pura.
