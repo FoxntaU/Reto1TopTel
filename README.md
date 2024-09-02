@@ -25,7 +25,7 @@ La actividad consiste en diseñar e implementar un sistema P2P donde cada nodo c
 
 Cada nodo debe poder mantener la red P2P y localizar recursos mediante consultas sobre los archivos disponibles en cada nodo, sin realizar una transferencia real de archivos. Sin embargo, los nodos deben implementar servicios básicos para la carga y descarga de archivos (mensajes). La comunicación entre nodos utilizará middleware como API REST, gRPC y/o MOM, y se espera que todos los microservicios soporten concurrencia
 
-### 1.1. Que aspectos cumplió o desarrolló de la actividad propuesta por el profesor (requerimientos funcionales y no funcionales)
+### 1.1. Que aspectos cumplió o desarrolló de la actividad propuesta por el profesor 
 #### Requerimientos Funcionales Cumplidos:
 
 - **Soporte para concurrencia:** Se implementó multithreading tanto en la API REST como en gRPC, permitiendo manejar hasta 10 conexiones simultáneas. Esto asegura que el sistema pueda atender múltiples solicitudes de manera concurrente, cumpliendo con la funcionalidad esencial de manejar conexiones múltiples de manera eficiente.
@@ -37,7 +37,7 @@ Cada nodo debe poder mantener la red P2P y localizar recursos mediante consultas
 - **Portabilidad:** La implementación del sistema en contenedores Docker asegura la portabilidad, lo que significa que el sistema puede ser desplegado en diferentes entornos sin modificaciones significativas.
 - **Confiabilidad y Eficiencia:** La combinación de API REST y gRPC para la comunicación garantiza una alta confiabilidad en la transmisión de datos y un bajo tiempo de latencia, lo que mejora la eficiencia del sistema
 
-### 1.2. Que aspectos NO cumplió o desarrolló de la actividad propuesta por el profesor (requerimientos funcionales y no funcionales)
+### 1.2. Que aspectos NO cumplió o desarrolló de la actividad propuesta por el profesor 
 
 Consideramos que se cumplieron con los todos los aspectos propuesto por el profesor.
 Ahora bien, como equipo decidimos no implementar el Middleware MOM (Message-Oriented Middleware). La decisión fue tomada para mantener la simplicidad y eficiencia del sistema, logrando los objetivos de concurrencia, escalabilidad y portabilidad de manera efectiva.
@@ -61,7 +61,6 @@ El diseño del sistema se basa en principios modernos de arquitectura distribuid
 #### Patrones de Diseño y Mejores Prácticas:
 - **Patrón de Microservicios:** Cada nodo contiene uno o más microservicios que se encargan de funciones específica,además se pueden escalar de manera independiente según la carga de trabajo, lo que es ideal para AWS
 - **Patrón de Proveedor/Consumidor:** se observa en la manera en que los nodos solicitan y proporcionan recursos (mensajes/archivos) entre sí. Esto asegura una distribución eficiente de los recursos en la red
-- **Patrón de Singleton:** En la creación y manejo de conexiones gRPC, asegurando que solo haya una instancia de la conexión por nodo, lo cual es eficiente en términos de recursos.
 - **Uso de gRPC:**  Es un framework altamente eficiente para la comunicación entre servicios, utilizando HTTP/2 para permitir multiplexación, compresión y cancelación de múltiples llamadas. Esto es especialmente importante en una red P2P distribuida, con lo que hicimos una implementación clara de la API, utilizando el archivo .proto para definir los servicios y mensajes para asegurarnos de tener una interfaz bien definida entre nodos.
 - **Uso de Docker:** Al utilizar docker nos aseguramos de que el codigo funcione de manera consistente en diferentes entornos, sumandole la combinación de Docker con una instancia EC2 de AWS permite un despliegue rápido y escalable, con la capacidad de manejar múltiples instancias según la demanda
 
@@ -69,7 +68,7 @@ El diseño del sistema se basa en principios modernos de arquitectura distribuid
 
 ### Lenguaje de programación
 
-El proyecto está desarrollado en **Python**, un lenguaje de programación interpretado, conocido por su simplicidad y versatilidad.
+El proyecto está desarrollado en **Python**
 
 ### Librerias y paquetes:
 - **gRPC (grpcio) Versión 1.39.0:** Utilizado para la comunicación eficiente entre microservicios mediante llamadas a procedimientos remotos (RPC). Facilita la construcción de servicios escalables y concurrentes.
@@ -80,10 +79,10 @@ El proyecto está desarrollado en **Python**, un lenguaje de programación inter
 ### Detalles del desarrollo.
 
 **Estructura del Código:**
-- Node.py: Contiene la lógica principal para un nodo en la red P2P, incluyendo las funcionalidades de carga y descarga de mensajes.
+- Node.py: Contiene la lógica principal para un nodo en la red P2P, incluyendo las funcionalidades de carga y descarga de mensajes, funciona como el nodo cliente
 - Dockerfile: Define cómo se construye la imagen Docker para contenerizar el proyecto.
-- docker-compose.yml: Permite configurar y documentar todas las dependencias de servicio de la aplicación
-- NodeServer.py: Implementa el servidor gRPC que maneja las solicitudes remotas
+- docker-compose.yml: Permite configurar y documentar todas las dependencias de servicio de la aplicación por cada nodo, sirve como archivo de configuración (Bootstrap). 
+- NodeServer.py: Implementa la lógica principal para un nodo en la red P2P, pero funcionando solo como servicio
 - .dockerignore:  Para excluir archivos y directorios del contexto de construcción
 - service_pb2.py / service_pb2_grpc.py: Archivos generados automáticamente por protobuf que contienen las definiciones y stub para gRPC.
 - requirements.txt: Especificar las librerías y sus versiones necesarias para que el programa funcione correctamente
@@ -127,11 +126,11 @@ cd Reto1TopTel
 sudo docker build -t nodos .
 
 #Luego, se ejecuta Docker Compose para levantar los servicios definidos en el archivo docker-compose.yml
-docker-compose up --build
+sudo docker-compose up --build
 
 ```
 
-**4. Ejecutar el Nodo Principal:**
+**4. Ejecutar el Nodo Principal (Cliente):**
 ```bash
 sudo docker run -it --rm --network reto1toptel_chord_network --ip 172.20.0.5 nodos python Node.py 172.20.0.5 5000
 ```
