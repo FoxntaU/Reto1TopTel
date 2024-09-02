@@ -22,7 +22,7 @@ Arquitectura P2P y Comunicación entre procesos mediante API REST, RPC y MOM
 [Presentacion en CANVA](https://www.canva.com/design/DAGPkOx6egk/fefitXrLr_wFTTLqH3dnEA/edit?utm_content=DAGPkOx6egk&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
 
 ### Video
-[Video en Youtube](https://www.youtube.com/)
+[Video en Youtube](https://youtu.be/CKxsj5QSphs)
 
 ### Documentación
 ## 1. Breve descripción de la actividad
